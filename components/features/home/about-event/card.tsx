@@ -1,15 +1,13 @@
 import Link from "next/link";
 import React from "react";
 
-const EventCard = ({ href, backgroundImage, alt }: {
-    href: string;
+const EventCard = ({ backgroundImage, alt }: {
     backgroundImage: string;
     alt?: string;
 }) => {
     return <article style={{
         backgroundImage: `url(${backgroundImage})`
-    }} className="h-[360px] bg-cover bg-center w-full rounded-[10px] relative overflow-hidden">
-        <Link href={href} className="size-full absolute" />
+    }} className="h-[360px] w-[90%]! mx-auto! bg-cover bg-center md:w-full rounded-[10px] relative overflow-hidden">
     </article>;
 };
 

@@ -1,0 +1,1 @@
+export const clickToCopy = (text: string) => navigator.clipboard.writeText(text)

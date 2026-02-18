@@ -10,16 +10,17 @@
 
   --color-primary: #90541d;
   --color-primary-green: #184642;
+  --color-milky: #f9edce;
   --font-IranNastaliq: "iran-nastaliq";
   --font-yekanbakh: "yekan-bakh";
 }
 
 @utility flex-center {
-  @apply flex items-center justify-center;
+  @apply flex items-center justify-center flex-row;
 }
 
 @utility flex-ic {
-  @apply flex items-center;
+  @apply flex items-center flex-row;
 }
 
 @utility flex-end {
@@ -51,4 +52,51 @@ img {
 
 body {
   @apply overflow-x-hidden font-yekanbakh;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #afafaf;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #24645f;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #187971;
+}
+
+body {
+  @apply overflow-x-hidden! w-dvw! mx-auto
+}
+html, body {
+  overflow-x: hidden;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+@supports (overflow-x: clip) {
+  body {
+    overflow-x: clip;   /* جدیدتر و قوی‌تر از hidden */
+  }
 }

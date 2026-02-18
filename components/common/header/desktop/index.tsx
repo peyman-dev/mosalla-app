@@ -8,7 +8,7 @@ const DesktopNavbar = () => {
       <div className="flex-end container pt-15 relative z-10">
 
         <div>
-          <Link className="bg-primary-green text-xl  py-2.5 px-3.75 text-white rounded-[10px]" href="#">
+          <Link className="bg-primary-green text-xl  py-2.5 px-3.75 text-white rounded-[10px]" href="/registeration">
             ثبت نام در افطاری
           </Link>
         </div>
