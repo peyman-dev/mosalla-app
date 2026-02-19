@@ -1,26 +1,30 @@
 "use client"
 
-import React from "react";
+import React, { useTransition } from "react";
 import { Button, Input } from "antd";
 import ResendOTP from "./resend-otp";
 import { useRegisterStore } from "@/core/stores/register.store";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { verifyOTP, getMe } from "@/app/actions";
+import { toast } from "react-toastify";
 
 const schema = z.object({
-    otp: z.string().length(4, "کد تایید باید ۴ رقم باشد")
+    otp: z.string().length(6, "کد تایید باید ۴ رقم باشد")
 });
 
 type FormData = z.infer<typeof schema>;
 
 const OTPStep = () => {
-    const { goNextStep } = useRegisterStore();
+    const { goNextStep, phoneNumber } = useRegisterStore();
+    const [loading, startAction] = useTransition()
 
     const {
         control,
         handleSubmit,
-        formState: { errors }
+        formState: { errors },
+        setError
     } = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
@@ -29,7 +33,25 @@ const OTPStep = () => {
     });
 
     const onSubmit = (data: FormData) => {
-        goNextStep();
+        // goNextStep()
+        startAction(async () => {
+            try {
+                const response = await verifyOTP({
+                    phone: phoneNumber,
+                    otp: data?.otp
+                })
+                console.log(response);
+
+
+                if (response?.ok) {
+                    goNextStep()
+                } else {
+                    toast.error(response?.error?.error || "تایید کد با خطا مواجه شد, دوباره تلاش کنید!")
+                }
+            } catch (error: any) {
+                toast.error(error?.message || "تایید کد با خطا مواجه شد, دوباره تلاش کنید!")
+            }
+        })
     };
 
     return (
@@ -51,7 +73,7 @@ const OTPStep = () => {
                                 classNames={{
                                     input: "text-white! font-yekanbakh! text-xl! font-medium! rounded-[20px]! bg-[#FFF3E266]! size-[64px]!"
                                 }}
-                                length={4}
+                                length={6}
                                 type="number"
                                 dir="ltr"
                             />
@@ -65,8 +87,9 @@ const OTPStep = () => {
             </div>
 
             <div className="pb-10 lg:pb-0">
-                <Button 
-                    htmlType="submit" 
+                <Button
+                    htmlType="submit"
+                    loading={loading}
                     className="bg-milky! text-2xl! font-bold! text-[#1C514C]! border-none! h-[67px]! lg:w-[335px]! w-[300px]! rounded-[20px]! font-yekanbakh!"
                 >
                     تایید

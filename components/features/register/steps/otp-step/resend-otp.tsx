@@ -1,8 +1,11 @@
 "use client"
 
+import { logInMobile } from "@/app/actions";
+import { useRegisterStore } from "@/core/stores/register.store";
 import React, { useState, useEffect } from "react";
 
 const ResendOTP = () => {
+    const { phoneNumber } = useRegisterStore()
     const [timeLeft, setTimeLeft] = useState(120);
     const [canResend, setCanResend] = useState(false);
 
@@ -11,6 +14,7 @@ const ResendOTP = () => {
             setCanResend(true);
             return;
         }
+
 
         const timer = setInterval(() => {
             setTimeLeft((prev) => prev - 1);
@@ -25,17 +29,20 @@ const ResendOTP = () => {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const handleResend = () => {
+    const handleResend = async () => {
         if (!canResend) return;
-        setTimeLeft(120);
-        setCanResend(false);
+        const request = await logInMobile(phoneNumber)
+        if (request?.ok) {
+            setTimeLeft(120);
+            setCanResend(false);
+        }
     };
 
     return (
         <div className="flex justify-center select-none font-yekanbakh">
             {canResend ? (
-                <p 
-                    onClick={handleResend} 
+                <p
+                    onClick={handleResend}
                     className="cursor-pointer text-milky underline underline-offset-4"
                 >
                     ارسال دوباره کد

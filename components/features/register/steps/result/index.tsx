@@ -7,29 +7,40 @@ import { saveAs } from "file-saver";
 import TicketPDF from "@/components/common/ticket-pdf";
 
 const ResultStep = () => {
-  const { familyMembers,phoneNumber, fullName,nationalCode } = useRegisterStore();
+  const {
+    phoneNumber,
+    fullName,
+    nationalCode,
+    familyMembers,
+    registrationResult,
+  } = useRegisterStore();
 
-  const data = {
-    registerer: {
-      phone: phoneNumber,
-      nationalCode: nationalCode,
-      fullName
-    },
-    familyMembers: familyMembers || [],
-    trackingCode: "IFTAR-9482KD",
-  };
+  // اگر نتیجه ثبت‌نام هنوز نیومده → پیام خطا یا لودینگ
+  if (!registrationResult) {
+    return (
+      <div className="pt-20 text-center text-white text-xl">
+        نتیجه ثبت‌نام یافت نشد...
+      </div>
+    );
+  }
+
+  const { tracking_code, registrant, family_national_codes } = registrationResult;
 
   const handleDownload = async () => {
     try {
       const blob = await pdf(
         <TicketPDF
-          registerer={data.registerer}
-          familyMembers={data.familyMembers}
-          trackingCode={data.trackingCode}
+          registerer={{
+            phone: phoneNumber,
+            nationalCode: nationalCode,
+            fullName,
+          }}
+          familyMembers={family_national_codes || []}
+          trackingCode={tracking_code}
         />
       ).toBlob();
 
-      saveAs(blob, `کارت-ورود-${data.trackingCode}.pdf`);
+      saveAs(blob, `کارت-ورود-${tracking_code}.pdf`);
     } catch (error) {
       console.error("خطا در ساخت PDF:", error);
       alert("متأسفانه مشکلی پیش آمد. دوباره امتحان کنید.");
@@ -37,7 +48,7 @@ const ResultStep = () => {
   };
 
   return (
-    <div className="pt-4  w-full">
+    <div className="pt-4 w-full">
       <div className="space-y-8 sm:space-y-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center space-y-6 sm:space-y-8">
           <p className="text-[#4EF393] font-IranNastaliq text-4xl sm:text-5xl font-bold">
@@ -47,12 +58,15 @@ const ResultStep = () => {
           <div className="flex items-center justify-center gap-3 text-lg sm:text-xl">
             <p>کد پیگیری:</p>
             <p>
-              <code className="font-mono">{data.trackingCode}</code>
+              <code className="font-mono bg-gray-800 px-2 py-1 rounded">
+                {tracking_code}
+              </code>
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 mt-12 sm:mt-16 lg:mt-20 w-full max-w-5xl mx-auto px-2 sm:px-0">
+          {/* ثبت‌نام کننده */}
           <div className="space-y-8 sm:space-y-10">
             <p className="text-white font-IranNastaliq text-xl sm:text-2xl font-medium text-center md:text-right">
               اطلاعات شخص ثبت نام کننده
@@ -61,24 +75,33 @@ const ResultStep = () => {
             <div className="space-y-5 text-base sm:text-xl">
               <div className="flex items-center gap-4 justify-between md:justify-start sm:gap-20">
                 <p className="w-[130px] sm:w-[140px] shrink-0">شماره همراه:</p>
-                <p className="font-medium">{data.registerer.phone}</p>
+                <p className="font-medium">{phoneNumber}</p>
               </div>
 
               <div className="flex items-center gap-4 justify-between md:justify-start sm:gap-20">
                 <p className="w-[130px] sm:w-[140px] shrink-0">کدملی:</p>
-                <p className="font-medium">{data.registerer.nationalCode}</p>
+                <p className="font-medium">{nationalCode}</p>
               </div>
+
+              {/* اگر اطلاعات بیشتری از registrant داری می‌تونی اینجا اضافه کنی */}
+              {registrant?.birthDate && (
+                <div className="flex items-center gap-4 justify-between md:justify-start sm:gap-20">
+                  <p className="w-[130px] sm:w-[140px] shrink-0">تاریخ تولد:</p>
+                  <p className="font-medium">{registrant.birthDate}</p>
+                </div>
+              )}
             </div>
           </div>
 
+          {/* اعضای خانواده / مهمان */}
           <div className="space-y-8 sm:space-y-10">
             <p className="text-white font-IranNastaliq text-xl sm:text-2xl font-medium text-center md:text-right">
               اعضای مهمان یا خانواده
             </p>
 
             <div className="space-y-5 text-base sm:text-xl">
-              {data.familyMembers.length > 0 ? (
-                data.familyMembers.map((nationalCode: string, i: number) => (
+              {family_national_codes?.length > 0 ? (
+                family_national_codes.map((code: string, i: number) => (
                   <div
                     key={i}
                     className="flex items-center gap-4 justify-between md:justify-start sm:gap-20"
@@ -86,7 +109,7 @@ const ResultStep = () => {
                     <p className="w-[170px] sm:w-[190px] shrink-0">
                       کد ملی مهمان {i + 1}:
                     </p>
-                    <p className="font-medium">{nationalCode}</p>
+                    <p className="font-medium">{code}</p>
                   </div>
                 ))
               ) : (

@@ -6,6 +6,7 @@ import { Button, Input } from "antd";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { logInMobile } from "@/app/actions";
 
 const schema = z.object({
     phoneNumber: z
@@ -23,7 +24,8 @@ const PhoneNumberStep = () => {
     const {
         control,
         handleSubmit,
-        formState: { errors }
+        formState: { errors },
+        setError
     } = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
@@ -33,7 +35,33 @@ const PhoneNumberStep = () => {
 
     const onSubmit = (data: FormData) => {
         setPhoneNumber(data.phoneNumber);
-        goNextStep();
+
+
+        try {
+            startTransition(async () => {
+                const response = await logInMobile(data?.phoneNumber)
+                console.log(response);
+
+                if (response?.ok) {
+                    goNextStep()
+                } else {
+                    setError("phoneNumber", {
+                        message: "ورود ناموفق بود, دوباره تلاش کنید!",
+                    }, {
+                        shouldFocus: true
+                    })
+                }
+            })
+        } catch (error) {
+            console.log(error);
+            setError("phoneNumber", {
+                message: "ورود ناموفق بود, دوباره تلاش کنید!",
+            }, {
+                shouldFocus: true
+            })
+
+        }
+        // goNextStep();
     };
 
     return (
@@ -71,6 +99,8 @@ const PhoneNumberStep = () => {
             <div className="pb-10 lg:pb-0">
                 <Button
                     htmlType="submit"
+                    loading={isPending}
+                    disabled={isPending}
                     className="bg-milky! text-2xl! font-bold! text-[#1C514C]! border-none! h-[67px]! lg:w-[335px]! rounded-[20px]! w-[300px]! font-yekanbakh!"
                 >
                     تایید
