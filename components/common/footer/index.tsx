@@ -18,7 +18,7 @@ const Footer = () => {
         <div className="relative z-1 size-full">
             <h6 className="text-center text-2xl font-bold flex-col-center gap-y-5 lg:flex-center! gap-3">
                 همین حالا ثبت نام کن و در افطاری
-                <span className="font-IranNastaliq font-normal! text-primary pt-5 lg:pt-0 text-4xl lg:text-[64px]">
+                <span className="font-IranNastaliq font-normal! text-primary  lg:pt-0 text-4xl lg:text-[64px]">
                     ماه مبارک رمضان
                 </span>
                 در کنار ما مهمان خدا باش.

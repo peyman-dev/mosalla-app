@@ -5,7 +5,7 @@ import React from "react";
 
 const HeroSection = () => {
     return (
-        <section className="relative mt-[460px] flex flex-col items-center ">
+        <section className="relative mt-[480px] md:mt-[570px] flex flex-col items-center ">
 
             <div className="space-y-[27px] text-center">
                 <p className="text-xl lg:text-[32px] font-semibold  leading-tight">
@@ -20,7 +20,9 @@ const HeroSection = () => {
                             مکان:
                         </div>
                         <p className="font-bold">
-                            زنجان، زینبیه غربی، سبزه میدان
+                            زنجان,
+                            بلوار دارالقرآن,
+                            مصلای بزرگ خاتم الانبیاء (ص)
                         </p>
                     </div>
 
@@ -30,14 +32,14 @@ const HeroSection = () => {
                             تاریخ و ساعت:
                         </div>
                         <p className="font-bold">
-                            ۳۰ بهمن و ۱ و ۲ اسفند ماه – ساعت ۱۷
+ هرشب ماه رمضان - از ساعت 16:30 
                         </p>
                     </div>
                 </div>
             </div>
-                <Link className="bg-primary-green text-2xl font-bold! mt-[59px]!  py-2.5 px-3.75 text-white rounded-[10px]" href="/registeration">
-                    ثبت نام در افطاری
-                </Link>
+            <Link className="bg-primary-green text-2xl font-bold! mt-[59px]!  py-2.5 px-3.75 text-white rounded-[10px]" href="/registeration">
+                ثبت نام در افطاری
+            </Link>
         </section>
     );
 };

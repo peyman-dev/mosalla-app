@@ -11,7 +11,7 @@
   --color-primary: #90541d;
   --color-primary-green: #184642;
   --color-milky: #f9edce;
-  --font-IranNastaliq: "iran-nastaliq";
+  --font-IranNastaliq: "gramaphone";
   --font-yekanbakh: "yekan-bakh";
 }
 
@@ -99,4 +99,8 @@ html, body {
   body {
     overflow-x: clip;   /* جدیدتر و قوی‌تر از hidden */
   }
+}
+
+.ant-select-item-option-selected {
+  @apply bg-primary-green! text-white!;
 }

@@ -2,8 +2,18 @@
 
 import { encryptSession, getSession } from "@/core/auth/session";
 import { request } from "@/core/lib/axios";
-import { access } from "fs";
 import { cookies } from "next/headers";
+
+const parseThis = (str: string) => {
+  try {
+    return JSON.parse(JSON.stringify(str));
+  } catch (error) {
+    console.log("Error parsing string:", error);
+    return null;
+  }
+};
+
+const getToken = async () => (await cookies())?.get("access_token")?.value;
 
 export const logInMobile = async (phoneNumber: string) => {
   try {
@@ -113,13 +123,131 @@ export const addFamilyMembers = async (payload: {
   ramadan_day: number;
   family_national_codes: string;
 }) => {
-  const accessToken = (await cookies())?.get("access_token")?.value;
-  const response = await request.post("/user/family-members/", payload, {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-  const data = await response.data;
-  return data;
+  try {
+    const accessToken = await getToken();
+    const response = await request.post("/user/family-members/", payload, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const data = await response.data;
+
+    return data;
+  } catch (error) {
+    return {
+      ok: false,
+      error: JSON.parse(JSON.stringify(error)),
+    };
+  }
 };
+
+export const getCapacityDays = async () => {
+  try {
+    const response = await request.get("/capacity/ramadan-days/");
+    const data = await response.data;
+    return data;
+  } catch (error) {
+    console.log(error);
+
+    return {
+      ok: false,
+      error: JSON.parse(JSON.stringify(error)),
+    };
+  }
+};
+
+export const getUsers = async () => {
+  try {
+    const accessToken = await getToken();
+    const response = await request.get("/admin/users/", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const data = await response.data;
+    return data;
+  } catch (error) {
+    return {
+      ok: false,
+      error: JSON.parse(JSON.stringify(error)),
+    };
+  }
+};
+
+export const getNationalCoedes = async () => {
+  try {
+    const token = await getToken();
+    const response = await request.get("/admin/national-codes/", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const data = await response.data;
+    return data;
+  } catch (error) {
+    return {
+      ok: false,
+      error: JSON.parse(JSON.stringify(error)),
+    };
+  }
+};
+
+export const makeUserAdmin = async (payload: any) => {
+  try {
+    const token = await getToken();
+    const response = await request.post("/admin/promote-phone/", payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.data;
+    return data;
+  } catch (err) {
+    return {
+      ok: false,
+      error: JSON.parse(JSON.stringify(err)),
+    };
+  }
+};
+
+export const getCapacities = async () => {
+  try {
+    const token = await getToken();
+    const response = await request.get("/admin/capacities/", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.data;
+    return data;
+  } catch (error) {
+    return {
+      ok: false,
+      error: JSON.parse(JSON.stringify(error)),
+    };
+  }
+};
+
+export const setCapacities = async (payload: any) => {
+  try {
+    const token = await getToken();
+    const response = await request.post("/admin/capacities/", payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await response.data;
+    return data;
+  } catch (error) {
+    return {
+      ok: false,
+      error: JSON.parse(JSON.stringify(error)),
+    };
+  }
+}

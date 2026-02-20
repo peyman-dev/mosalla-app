@@ -425,3 +425,8 @@
   font-family: "iran-nastaliq";
   src: url(./../fonts/IranNastaliq-Web.woff) format("woff");
 }
+
+@font-face {
+  font-family: "gramaphone";
+  src: url("./../fonts/GramophoneFaNum-Clean.woff");
+}

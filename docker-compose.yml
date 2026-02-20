@@ -1,0 +1,49 @@
+services:
+  next-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nextjs_mosalla
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+
+      # HTTP router (برای همه درخواست‌های http → https)
+      - "traefik.http.routers.mosalla-http.rule=Host(`mosalla-zn.ir`,`www.mosalla-zn.ir`)"
+      - "traefik.http.routers.mosalla-http.entrypoints=web"
+      - "traefik.http.routers.mosalla-http.middlewares=redirect-to-https"
+
+      # HTTPS router اصلی (non-www)
+      - "traefik.http.routers.mosalla.rule=Host(`mosalla-zn.ir`)"
+      - "traefik.http.routers.mosalla.entrypoints=websecure"
+      - "traefik.http.routers.mosalla.tls=true"
+      - "traefik.http.routers.mosalla.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.mosalla.service=mosalla"
+
+      # HTTPS router برای www → redirect به non-www
+      - "traefik.http.routers.mosalla-www.rule=Host(`www.mosalla-zn.ir`)"
+      - "traefik.http.routers.mosalla-www.entrypoints=websecure"
+      - "traefik.http.routers.mosalla-www.tls=true"
+      - "traefik.http.routers.mosalla-www.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.mosalla-www.middlewares=redirect-www-to-main"
+      - "traefik.http.routers.mosalla-www.service=mosalla"   # یا noop@internal اگر نمی‌خوای محتوا سرو بشه
+
+      # سرویس (پورت داخلی اپ)
+      - "traefik.http.services.mosalla.loadbalancer.server.port=3000"
+
+      # میدل‌ورها
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+
+      # redirect www → non-www (با 301 permanent برای SEO)
+      - "traefik.http.middlewares.redirect-www-to-main.redirectregex.regex=^https?://www\\.(.+)"
+      - "traefik.http.middlewares.redirect-www-to-main.redirectregex.replacement=https://$${1}"
+      - "traefik.http.middlewares.redirect-www-to-main.redirectregex.permanent=true"
+
+networks:
+  web:
+    external: true

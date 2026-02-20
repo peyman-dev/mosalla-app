@@ -71,7 +71,7 @@ const OTPStep = () => {
                                 {...field}
                                 className="mx-auto! flex justify-center!"
                                 classNames={{
-                                    input: "text-white! font-yekanbakh! text-xl! font-medium! rounded-[20px]! bg-[#FFF3E266]! size-[64px]!"
+                                    input: "text-white! font-yekanbakh! text-xl! font-medium! rounded-xl! lg:rounded-[20px]! bg-[#FFF3E266]! size-12! lg:size-[64px]!"
                                 }}
                                 length={6}
                                 type="number"

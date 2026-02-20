@@ -1,5 +1,6 @@
 "use client";
 import { useRegisterStore } from "@/core/stores/register.store";
+import { getCapacityDays } from "@/app/actions";
 import { Button } from "antd";
 import { Download } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
@@ -15,7 +16,6 @@ const ResultStep = () => {
     registrationResult,
   } = useRegisterStore();
 
-  // اگر نتیجه ثبت‌نام هنوز نیومده → پیام خطا یا لودینگ
   if (!registrationResult) {
     return (
       <div className="pt-20 text-center text-white text-xl">
