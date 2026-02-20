@@ -44,7 +44,7 @@ type StoreType = {
 };
 
 export const useRegisterStore = create<StoreType>((set, get) => ({
-  step: "ADD_FAMILY",
+  step: "PHONE_NUMBER",
   phoneNumber: "",
   fullName: "",
   nationalCode: "",
