@@ -30,7 +30,7 @@ services:
       - "traefik.http.routers.mosalla-www.tls=true"
       - "traefik.http.routers.mosalla-www.tls.certresolver=letsencrypt"
       - "traefik.http.routers.mosalla-www.middlewares=redirect-www-to-main"
-      - "traefik.http.routers.mosalla-www.service=mosalla"   # یا noop@internal اگر نمی‌خوای محتوا سرو بشه
+      - "traefik.http.routers.mosalla-www.service=mosalla" # یا noop@internal اگر نمی‌خوای محتوا سرو بشه
 
       # سرویس (پورت داخلی اپ)
       - "traefik.http.services.mosalla.loadbalancer.server.port=3000"
