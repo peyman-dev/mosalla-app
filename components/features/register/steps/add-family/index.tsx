@@ -14,18 +14,25 @@ import { toast } from "react-toastify";
 
 const nationalCodeSchema = z
     .string()
-    .nonempty("کد ملی الزامی است")
-    .regex(/^\d{10}$/, "کد ملی باید دقیقاً ۱۰ رقم عددی باشد");
+    .trim()
+    .pipe(
+        z.union([
+            z.literal(""),
+            z.string().regex(/^\d{10}$/, "کد ملی باید دقیقاً ۱۰ رقم عددی باشد"),
+        ])
+    );
 
 const schema = z.object({
     fullName: z.string().min(3, "نام و نام خانوادگی الزامی است"),
     nationalCode: nationalCodeSchema,
     attendanceDay: z.number().min(1, "لطفاً روز را انتخاب کنید").max(30),
-    familyMembers: z.array(
-        z.object({
-            code: nationalCodeSchema.optional().or(z.literal(""))
-        })
-    ).optional()
+    familyMembers: z
+        .array(
+            z.object({
+                code: nationalCodeSchema,
+            })
+        )
+        .optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -36,10 +43,13 @@ type CapacityDay = {
     hasCapacity: boolean;
     capacity: number;
     leftCapacity: number;
+    timestamp?: number;
 };
 
 const AddFamilyStep = () => {
     const { goNextStep, fullName, nationalCode, setRegistrationResult, familyMembers, setUserInfo, setFamilyMembers } = useRegisterStore();
+
+    const isAlreadyRegistered = Boolean(nationalCode && nationalCode.trim().length === 10);
 
     const [days, setDays] = React.useState<CapacityDay[]>([]);
     const [loadingDays, setLoadingDays] = React.useState(true);
@@ -50,15 +60,15 @@ const AddFamilyStep = () => {
         formState: { errors, isSubmitting },
         watch,
         setValue,
-        reset
+        reset,
     } = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
             fullName: fullName || "",
             nationalCode: nationalCode || "",
             attendanceDay: 0,
-            familyMembers: familyMembers?.length > 0 ? familyMembers.map(m => ({ code: m })) : []
-        }
+            familyMembers: familyMembers?.length > 0 ? familyMembers.map((m) => ({ code: m })) : [],
+        },
     });
 
     const selectedDay = watch("attendanceDay");
@@ -71,17 +81,24 @@ const AddFamilyStep = () => {
             try {
                 const res = await getCapacityDays();
                 console.log(res);
-
+                
 
                 if (ignore) return;
 
                 if (res?.ok && Array.isArray(res.data)) {
                     const serverDays: CapacityDay[] = res.data;
-                    setDays(serverDays);
 
-                    // انتخاب اولین روز معتبر اگر هنوز چیزی انتخاب نشده
+                    const todayStart = new Date().setHours(0, 0, 0, 0);
+
+                    const processedDays = serverDays.map((day) => ({
+                        ...day,
+                        disabled: day.timestamp ? day.timestamp < todayStart : false,
+                    }));
+
+                    setDays(processedDays);
+
                     if (!selectedDay) {
-                        const firstAvailable = serverDays.find(d => d.hasCapacity);
+                        const firstAvailable = processedDays.find((d) => d.hasCapacity && !d.disabled);
                         if (firstAvailable) {
                             setValue("attendanceDay", firstAvailable.value);
                         }
@@ -97,8 +114,10 @@ const AddFamilyStep = () => {
         };
 
         fetchDays();
-        return () => { ignore = true; };
-    }, []);
+        return () => {
+            ignore = true;
+        };
+    }, [selectedDay, setValue]);
 
     const generateFallbackDays = (): CapacityDay[] => {
         return Array.from({ length: 30 }, (_, i) => {
@@ -108,7 +127,7 @@ const AddFamilyStep = () => {
                 label: `روز ${day === 1 ? "اول" : day === 2 ? "دوم" : day === 3 ? "سوم" : `${day}م`}`,
                 hasCapacity: true,
                 capacity: 2000,
-                leftCapacity: 999
+                leftCapacity: 999,
             };
         });
     };
@@ -118,24 +137,26 @@ const AddFamilyStep = () => {
             fullName: fullName || "",
             nationalCode: nationalCode || "",
             attendanceDay: selectedDay || 0,
-            familyMembers: familyMembers?.length > 0 ? familyMembers.map(m => ({ code: m })) : []
+            familyMembers: familyMembers?.length > 0 ? familyMembers.map((m) => ({ code: m })) : [],
         });
-    }, [fullName, nationalCode, familyMembers, reset]);
+    }, [fullName, nationalCode, familyMembers, reset, selectedDay]);
 
     const { fields, append, remove } = useFieldArray({
         control,
-        name: "familyMembers"
+        name: "familyMembers",
     });
 
     const onSubmit = async (data: FormData) => {
-        const selected = days.find(d => d.value === data.attendanceDay);
-        if (!selected || !selected.hasCapacity) {
-            toast.error("روز انتخاب‌شده ظرفیت ندارد");
+        const selected = days.find((d) => d.value === data.attendanceDay);
+        if (!selected || !selected.hasCapacity || (selected.timestamp && selected.timestamp < new Date().setHours(0, 0, 0, 0))) {
+            toast.error("روز انتخاب‌شده معتبر نیست یا ظرفیت ندارد");
             return;
         }
 
+        const mainNationalCode = isAlreadyRegistered ? "" : data.nationalCode.trim();
+
         const familyCodes = (data.familyMembers || [])
-            .map(m => m.code?.trim())
+            .map((m) => m.code?.trim())
             .filter((code): code is string => !!code && code.length === 10);
 
         const payload = {
@@ -143,7 +164,7 @@ const AddFamilyStep = () => {
             ramadan_day: data.attendanceDay,
             family_national_codes: familyCodes.join(",") || "",
             full_name: data.fullName.trim(),
-            national_code: data.nationalCode.trim()
+            national_code: mainNationalCode,
         };
 
         const response = await addFamilyMembers(payload);
@@ -151,81 +172,79 @@ const AddFamilyStep = () => {
         if (response?.ok) {
             toast.success("ثبت‌نام با موفقیت انجام شد");
             setRegistrationResult(response.confirmation);
-            setUserInfo(payload.full_name, payload.national_code);
+            setUserInfo(data.fullName.trim(), data.nationalCode.trim());
             setFamilyMembers(familyCodes);
             goNextStep();
         } else {
-
             toast.error(response?.error?.error || "خطا در ثبت اطلاعات");
         }
-
     };
 
     const commonInputStyles = "bg-[#FFF3E236]! border-milky! border-solid! border-[1px]! h-[64px]! rounded-[20px]! text-white! font-yekanbakh! w-full";
 
-    const dayOptions = days.map(d => ({
+    const dayOptions = days.map((d) => ({
         value: d.value,
-        label: d.label,
-        disabled: !d.hasCapacity
+        label: `${d.label} (${d.leftCapacity} نفر باقی‌مانده)`,
+        disabled: !d.hasCapacity || (d.timestamp ? d.timestamp < new Date().setHours(0, 0, 0, 0) : false),
     }));
 
-    const selectedDayInfo = days.find(d => d.value === selectedDay);
+    const selectedDayInfo = days.find((d) => d.value === selectedDay);
 
     return (
         <ConfigProvider locale={fa_IR} direction="rtl">
             <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <style>{`
-                input::-webkit-outer-spin-button,
-                input::-webkit-inner-spin-button {
-                    -webkit-appearance: none;
-                    margin: 0;
-                }
-                input[type=number] {
-                    -moz-appearance: textfield;
-                }
-                .ant-input {
-                    background-color: transparent !important;
-                    color: white !important;
-                }
-                .ant-input::placeholder {
-                    color: rgba(255, 255, 255, 0.7) !important;
-                }
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 4px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: transparent;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: #FFF3E266;
-                    border-radius: 10px;
-                }
-                .ant-select-selector {
-                    background-color: #FFF3E236 !important;
-                    border: 1px solid #FFF3E2 !important;
-                    border-radius: 20px !important;
-                    height: 64px !important;
-                    color: white !important;
-                    font-family: 'yekanbakh', sans-serif !important;
-                    padding: 0 16px !important;
-                }
-                .ant-select-selection-item {
-                    color: white !important;
-                    line-height: 62px !important;
-                }
-                .ant-select-arrow {
-                    color: #FFF3E2 !important;
-                }
-                .ant-select-dropdown {
-                    background: #1C514C !important;
-                }
-                .ant-select-item-option-content {
-                    color: white !important;
-                }
-                .ant-select-item-option-disabled .ant-select-item-option-content {
-                    color: rgba(255,255,255,0.4) !important;
-                }
-                `}</style>
+          input::-webkit-outer-spin-button,
+          input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+          }
+          input[type=number] {
+            -moz-appearance: textfield;
+          }
+          .ant-input {
+            background-color: transparent !important;
+            color: white !important;
+          }
+          .ant-input::placeholder {
+            color: rgba(255, 255, 255, 0.7) !important;
+          }
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #FFF3E266;
+            border-radius: 10px;
+          }
+          .ant-select-selector {
+            background-color: #FFF3E236 !important;
+            border: 1px solid #FFF3E2 !important;
+            border-radius: 20px !important;
+            height: 64px !important;
+            color: white !important;
+            font-family: 'yekanbakh', sans-serif !important;
+            padding: 0 16px !important;
+          }
+          .ant-select-selection-item {
+            color: white !important;
+            line-height: 62px !important;
+          }
+          .ant-select-arrow {
+            color: #FFF3E2 !important;
+          }
+          .ant-select-dropdown {
+            background: #1C514C !important;
+          }
+          .ant-select-item-option-content {
+            color: white !important;
+          }
+          .ant-select-item-option-disabled .ant-select-item-option-content {
+            color: rgba(255,255,255,0.4) !important;
+          }
+        `}</style>
 
                 <h1 className="flex justify-center font-IranNastaliq text-4xl md:text-5xl font-bold py-6 text-white">
                     ثبت نام
@@ -271,13 +290,16 @@ const AddFamilyStep = () => {
                                             maxLength={10}
                                             inputMode="numeric"
                                             className={clsx(commonInputStyles, "text-left")}
-                                            placeholder="کد ملی خود را وارد کنید"
-                                            onWheel={e => e.currentTarget.blur()}
+                                            placeholder={isAlreadyRegistered ? "کد ملی ثبت شده" : "کد ملی خود را وارد کنید"}
+                                            disabled={isAlreadyRegistered}
                                             dir="ltr"
+                                            onWheel={(e) => e.currentTarget.blur()}
                                         />
                                     )}
                                 />
-                                {errors.nationalCode && <p className="text-red-400 text-sm mt-1">{errors.nationalCode.message}</p>}
+                                {errors.nationalCode && !isAlreadyRegistered && (
+                                    <p className="text-red-400 text-sm mt-1">{errors.nationalCode.message}</p>
+                                )}
                             </div>
 
                             <div className="flex flex-col gap-3">
@@ -298,29 +320,26 @@ const AddFamilyStep = () => {
                                                 placeholder="انتخاب روز حضور"
                                                 className="w-full bg-primary-green! **:font-yekanbakh! *:text-white! text-white! h-12!"
                                                 disabled={isSubmitting || days.length === 0}
-                                                dropdownClassName="custom-scrollbar"
+                                                dropdownClassName="**:font-yekanbakh!"
                                                 notFoundContent="هیچ روزی یافت نشد"
                                             />
                                         )}
                                     />
                                 )}
-                                {selectedDay > 0 && selectedDayInfo && !selectedDayInfo.hasCapacity && (
-                                    <p className="text-red-400 text-sm mt-1">
-                                        این روز ظرفیت ندارد
-                                    </p>
-                                )}
-                                {errors.attendanceDay && <p className="text-red-400 text-sm mt-1">
-                                    {errors.attendanceDay.message}
-                                </p>}
+                                {selectedDay > 0 &&
+                                    selectedDayInfo &&
+                                    (!selectedDayInfo.hasCapacity ||
+                                        (selectedDayInfo.timestamp && selectedDayInfo.timestamp < new Date().setHours(0, 0, 0, 0))) && (
+                                        <p className="text-red-400 text-sm mt-1">این روز قابل انتخاب نیست</p>
+                                    )}
+                                {errors.attendanceDay && <p className="text-red-400 text-sm mt-1">{errors.attendanceDay.message}</p>}
                             </div>
                         </div>
                     </div>
 
                     <div className="order-2">
                         <div className="space-y-4">
-                            <p className="text-2xl md:text-3xl font-IranNastaliq! text-white">
-                                اطلاعات همراهان
-                            </p>
+                            <p className="text-2xl md:text-3xl font-IranNastaliq! text-white">اطلاعات همراهان</p>
                             <p className="text-lg md:text-xl font-bold text-white">
                                 کد ملی اعضای همراه خود را وارد کنید (اختیاری)
                             </p>
@@ -338,9 +357,7 @@ const AddFamilyStep = () => {
                             {fields.map((field, index) => (
                                 <div key={field.id} className="flex flex-col gap-3 animate-in fade-in duration-300">
                                     <div className="flex justify-between items-center">
-                                        <label className="select-none text-lg text-[#FFF3E2]">
-                                            کد ملی همراه {index + 1}
-                                        </label>
+                                        <label className="select-none text-lg text-[#FFF3E2]">کد ملی همراه {index + 1}</label>
                                         <Trash2
                                             size={20}
                                             className="text-red-400 cursor-pointer hover:scale-110 transition-transform"
@@ -358,15 +375,13 @@ const AddFamilyStep = () => {
                                                 inputMode="numeric"
                                                 className={clsx(commonInputStyles, "text-left")}
                                                 placeholder="کد ملی همراه را وارد کنید"
-                                                onWheel={e => e.currentTarget.blur()}
+                                                onWheel={(e) => e.currentTarget.blur()}
                                                 dir="ltr"
                                             />
                                         )}
                                     />
                                     {errors.familyMembers?.[index]?.code && (
-                                        <p className="text-red-400 text-sm mt-1">
-                                            {errors.familyMembers[index]?.code?.message}
-                                        </p>
+                                        <p className="text-red-400 text-sm mt-1">{errors.familyMembers[index]?.code?.message}</p>
                                     )}
                                 </div>
                             ))}

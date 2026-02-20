@@ -4,7 +4,7 @@ import { encryptSession, getSession } from "@/core/auth/session";
 import { request } from "@/core/lib/axios";
 import { cookies } from "next/headers";
 
-const parseThis = (str: string) => {
+const parseThis = (str: any) => {
   try {
     return JSON.parse(JSON.stringify(str));
   } catch (error) {
@@ -157,15 +157,31 @@ export const getCapacityDays = async () => {
   }
 };
 
-export const getUsers = async () => {
+// app/actions.ts یا فایل مربوطه
+export const getUsers = async ({
+  national_code = "",
+  phone = "",
+  ramadan_day,
+}: {
+  national_code?: string;
+  phone?: string;
+  ramadan_day?: number;
+} = {}) => {
   try {
     const accessToken = await getToken();
+
     const response = await request.get("/admin/users/", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
+      params: {
+        national_code: national_code?.trim() || undefined,
+        phone: phone?.trim() || undefined,
+        ramadan_day: ramadan_day ?? undefined, // ?? بهتر از || برای عدد 0
+      },
     });
-    const data = await response.data;
+
+    const data = response.data;
     return data;
   } catch (error) {
     return {
@@ -174,7 +190,6 @@ export const getUsers = async () => {
     };
   }
 };
-
 export const getNationalCoedes = async () => {
   try {
     const token = await getToken();
@@ -235,7 +250,7 @@ export const getCapacities = async () => {
 export const setCapacities = async (payload: any) => {
   try {
     const token = await getToken();
-    const response = await request.post("/admin/capacities/", payload, {
+    const response = await request.post("/admin/capacities/set/", payload, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -250,4 +265,28 @@ export const setCapacities = async (payload: any) => {
       error: JSON.parse(JSON.stringify(error)),
     };
   }
-}
+};
+
+export const updateNationalCodes = async (payload: {
+  national_code?: string;
+  national_codes?: string[];
+  note?: string;
+}) => {
+  try {
+    const token = await getToken();
+    const response = await request.post(
+      "/admin/national-codes/save/",
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    const data = await response.data;
+    return data;
+  } catch (error: any) {
+    return parseThis(error);
+  }
+};
