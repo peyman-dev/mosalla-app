@@ -1,9 +1,10 @@
+"use client"
 import { IdCardIcon, LucideCalendarCheck2, Users2 } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
 const Sidebar = () => {
-    return <aside className="h-dvh md:visible! md:block! hidden invisible! sticky top-0 right-0 w-[260px] p-5 border-e border-primary/20 bg-primary/10">
+    return <aside className="h-dvh md:visible! md:block! hidden invisible! sticky top-0 right-0 w-[260px] p-5 border-e border-zinc-100 bg-zinc-50">
         <header>
             <p className="text-2xl text-center font-bold text-primary">
                 پنل مدیریت
@@ -14,10 +15,10 @@ const Sidebar = () => {
                 <Users2 />
                 کاربران
             </Link>
-            <Link href={"/panel/national-codes"}>
+            {/* <Link href={"/panel/national-codes"}>
                 <IdCardIcon />
                 کدهای ملی
-            </Link>
+            </Link> */}
             <Link href={"/panel/capacities"}>
                 <LucideCalendarCheck2 />
                 ظرفیت ها

@@ -168,6 +168,8 @@ const AddFamilyStep = () => {
         };
 
         const response = await addFamilyMembers(payload);
+        console.log(response);
+        
 
         if (response?.ok) {
             toast.success("ثبت‌نام با موفقیت انجام شد");

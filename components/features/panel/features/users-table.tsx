@@ -1,12 +1,16 @@
 "use client";
 
-import React from "react";
-import { Table, Button, Tag, Tooltip } from "antd";
-import type { ColumnsType } from "antd/es/table";
+import { Button, Tag, Tooltip, Modal, Input, Flex } from "antd";
 import { UserKey } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { makeUserAdmin } from "@/app/actions";
+import { updateAttendeesCount } from "@/app/actions";
 import { toast } from "react-toastify";
+import { useToggle } from "@/core/hooks/toggle.hook";
+import { useState, useMemo, useCallback, useRef } from "react";
+import { AgGridReact } from "ag-grid-react";
+import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
+
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 interface UserRecord {
   id: number;
@@ -27,17 +31,27 @@ interface Props {
 
 const UsersTable: React.FC<Props> = ({ data }) => {
   const queryClient = useQueryClient();
+  const [attendeesCount, setAttendeesCount] = useState({
+    user_id: 0,
+    count: 0
+  });
+  const [o, t] = useToggle();
+
+  const gridRef = useRef<any>(null);
 
   const mutation = useMutation({
-    mutationFn: makeUserAdmin,
+    mutationFn: ({ id, count }: { id: number; count: number }) => updateAttendeesCount({
+      user_id: id,
+      attendees_count: count
+    }),
     onSuccess: (response) => {
-        console.log(response);
-        
+      console.log(response);
+      
       if (response.ok) {
-        toast.success(`${response.data?.phone || "کاربر"} با موفقیت ادمین شد`);
+        toast.success(`تعداد نفرات کاربر ${response.data?.phone || "کاربر"} با موفقیت بروزرسانی شد`);
         queryClient.invalidateQueries({ queryKey: ["users"] });
       } else {
-        toast.error(response.error || "خطا در ارتقا به ادمین");
+        toast.error(response.error || "خطا در بروزرسانی تعداد نفرات");
       }
     },
     onError: () => {
@@ -45,118 +59,202 @@ const UsersTable: React.FC<Props> = ({ data }) => {
     },
   });
 
-  const columns: ColumnsType<UserRecord> = [
+  const onGridReady = useCallback((params: any) => {
+    gridRef.current = params;
+    if (params.api) {
+      params.api.sizeColumnsToFit();
+    }
+  }, []);
+
+  const onGridSizeChanged = useCallback(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.sizeColumnsToFit();
+    }
+  }, []);
+
+  const columnDefs = useMemo(() => [
     {
-      title: "ردیف",
-      key: "index",
-      width: 80,
-      align: "center",
-      fixed: "left",
-      render: (_, __, idx) => idx + 1,
+      headerName: "ردیف",
+      
+      valueGetter: "node.rowIndex + 1",
+      flex: 0.5,
+      minWidth: 60,
+      pinned: "right",
+      suppressMovable: true,
+      cellClass: "font-yekanbakh!"
     },
     {
-      title: "نام و نام خانوادگی",
-      dataIndex: "fullName",
-      key: "fullName",
-      width: 220,
+      headerName: "نام و نام خانوادگی",
+      
+      field: "fullName",
+      flex: 2,
+      minWidth: 180,
+      cellClass: "font-yekanbakh!"
     },
     {
-      title: "کد ملی",
-      dataIndex: "nationalCode",
-      key: "nationalCode",
-      width: 140,
+      headerName: "کد ملی",
+      
+      field: "nationalCode",
+      flex: 1.2,
+      minWidth: 120,
+      cellClass: "font-yekanbakh!"
     },
     {
-      title: "شماره همراه",
-      dataIndex: "phone",
-      key: "phone",
-      width: 140,
+      headerName: "شماره همراه",
+      
+      field: "phone",
+      flex: 1.3,
+      minWidth: 130,
+      cellClass: "font-yekanbakh!"
     },
     {
-      title: "روز رمضان",
-      dataIndex: "ramadanDayLabel",
-      key: "ramadanDayLabel",
-      width: 110,
-      render: (text) => <Tag color="blue">{text}</Tag>,
+      headerName: "روز رمضان",
+      
+      field: "ramadanDayLabel",
+      flex: 0.9,
+      minWidth: 100,
+      cellRenderer: (params: any) => <Tag color="blue" className="font-yekanbakh!">{params.value}</Tag>,
     },
     {
-      title: "تاریخ حضور",
-      dataIndex: "attendanceDateShamsi",
-      key: "attendanceDateShamsi",
-      width: 130,
+      headerName: "تاریخ حضور",
+      
+      field: "attendanceDateShamsi",
+      flex: 1.1,
+      minWidth: 110,
+      cellClass: "font-yekanbakh!"
     },
     {
-      title: "کد رهگیری",
-      dataIndex: "trackingCode",
-      key: "trackingCode",
-      width: 160,
+      headerName: "کد رهگیری",
+      
+      field: "trackingCode",
+      flex: 1,
+      minWidth: 110,
+      cellClass: "font-yekanbakh!"
     },
     {
-      title: "کد ملی خانواده",
-      dataIndex: "familyNationalCodes",
-      key: "familyNationalCodes",
-      width: 220,
-      render: (codes: string[]) =>
-        codes?.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {codes.map((code) => (
-              <Tag key={code} color="purple" className="text-xs">
+      headerName: "کد ملی خانواده",
+      
+      field: "familyNationalCodes",
+      flex: 1.4,
+      minWidth: 160,
+      cellRenderer: (params: any) => {
+        const codes = params.value;
+        return codes?.length > 0 ? (
+          <div className="flex flex-wrap gap-1 items-center h-full font-yekanbakh!">
+            {codes.map((code: string) => (
+              <Tag key={code} color="purple" className="text-xs font-yekanbakh!">
                 {code}
               </Tag>
             ))}
           </div>
         ) : (
-          <span className="text-gray-400 text-sm">—</span>
-        ),
+          <span className="text-gray-400 text-sm font-yekanbakh!">—</span>
+        );
+      },
     },
     {
-      title: "ثبت شده در",
-      dataIndex: "submittedAt",
-      key: "submittedAt",
-      width: 170,
-      render: (text: string) => new Date(text).toLocaleString("fa-IR"),
+      headerName: "ثبت شده در",
+      
+      field: "submittedAt",
+      flex: 1.3,
+      minWidth: 140,
+      cellClass: "font-yekanbakh!",
+      valueFormatter: (params: any) => new Date(params.value).toLocaleString("fa-IR"),
     },
     {
-      title: "عملیات",
-      key: "action",
-      width: 100,
-      fixed: "right",
-      align: "center",
-      render: (_, record) => (
-        <Tooltip title="ارتقا به ادمین">
+      headerName: "عملیات",
+      
+      flex: 0.7,
+      minWidth: 80,
+      pinned: "left",
+      cellRenderer: (params: any) => (
+        <Tooltip title="تعداد نفرات حاضر" className="font-yekanbakh!">
           <Button
             type="text"
             icon={<UserKey size={18} />}
-            onClick={() => mutation.mutate(record.phone)}
+            onClick={() => {
+              t();
+              setAttendeesCount({
+                user_id: params.data.id,
+                count: (params.data.familyNationalCodes?.length || 0) + 1
+              });
+            }}
             loading={mutation.isPending}
             disabled={mutation.isPending}
-            className="text-blue-600 hover:text-blue-800"
+            className="text-blue-600 hover:text-blue-800 font-yekanbakh!"
           />
         </Tooltip>
       ),
     },
-  ];
+  ], [mutation.isPending, t]);
 
   return (
-    <div className="w-full overflow-x-auto">
-      <Table
-        columns={columns}
-        dataSource={data}
-        rowKey="id"
-        pagination={{
-          pageSize: 50,
-          showSizeChanger: false,
-          showTotal: (total) => `مجموع: ${total} نفر`,
-          locale: { items_per_page: "نفر در صفحه" },
+    <div 
+      className="w-full font-yekanbakh ag-theme-quartz" 
+      style={{ width: "100%", height: "600px" }}
+    >
+      <AgGridReact
+        ref={gridRef}
+        rowData={data}
+        columnDefs={columnDefs as any}
+        enableRtl={true}
+        pagination={true}
+        paginationPageSize={50}
+        defaultColDef={{
+          resizable: true,
+          sortable: true,
+          filter: true,
+          autoHeight: true,
+          headerClass: "font-yekanbakh!",
+          minWidth: 80,           // حداقل عرض کلی برای همه ستون‌ها
         }}
-        scroll={{ x: 1200 }}
-        size="middle"
-        bordered
-        className="ant-table-rtl **:font-yekanbakh! min-w-[1100px]"
-        locale={{
-          emptyText: "داده‌ای برای نمایش وجود ندارد",
-        }}
+        onGridReady={onGridReady}
+        onGridSizeChanged={onGridSizeChanged}
+        overlayNoRowsTemplate='<span class="font-yekanbakh!">داده‌ای برای نمایش وجود ندارد</span>'
       />
+
+      <Modal
+        open={o}
+        onCancel={t}
+        title="تغییر تعداد نفرات حاضر"
+        className="font-yekanbakh!"
+        footer={
+          <Flex justify="end" gap={8} className="font-yekanbakh!">
+            <Button onClick={t} className="font-yekanbakh!">انصراف</Button>
+            <Button
+              type="primary"
+              onClick={() => {
+                mutation.mutate({ id: attendeesCount.user_id, count: attendeesCount.count });
+                t();
+              }}
+              loading={mutation.isPending}
+              disabled={attendeesCount?.count < 0 || attendeesCount?.count > 10 || mutation.isPending}
+              className="font-yekanbakh!"
+            >
+              ثبت
+            </Button>
+          </Flex>
+        }
+        centered
+      >
+        <div className="my-10 flex justify-center font-yekanbakh!">
+          <Input
+            placeholder="مثال: 4"
+            className="h-12! font-yekanbakh!"
+            type="number"
+            max={10}
+            min={0}
+            value={attendeesCount.count}
+            onChange={(e) => {
+              const value = e.target.value;
+              setAttendeesCount(prev => ({
+                ...prev,
+                count: parseInt(value) || 0
+              }));
+            }}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

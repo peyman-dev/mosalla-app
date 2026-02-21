@@ -290,3 +290,62 @@ export const updateNationalCodes = async (payload: {
     return parseThis(error);
   }
 };
+
+export const enquireNationalCode = async (national_code: string) => {
+  try {
+    const response = await request.get("/inquiry/", {
+      params: {
+        national_code,
+      },
+    });
+    const data = await response.data;
+    return data;
+  } catch (error: any) {
+    return parseThis(error);
+  }
+};
+
+export const updateAttendeesCount = async (payload: {
+  user_id: number;
+  attendees_count: number;
+}) => {
+  try {
+    const token = await getToken();
+    const response = await request.post(
+      "/admin/users/attendees-count/set/",
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    const data = await response.data;
+    return data;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const cancelRegisteration = async (phone: string) => {
+  try {
+    const response = await request.post(
+      "/user/cancel-registeration/",
+      JSON.stringify({
+        mobile: phone,
+      }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    const data = await response.data;
+    return data;
+  } catch (error) {
+    console.log(error);
+    
+    return parseThis(error);
+  }
+};

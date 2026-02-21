@@ -8,7 +8,7 @@ import HeroSection from "@/components/features/home/hero-section";
 import WaitingForStart from "@/components/features/home/waiting-for-start";
 
 const page = () => {
-  return <main className="*:grow!">
+  return <main className="*:grow! bg-white!">
     <Header />
     <HeroSection />
     <WaitingForStart />

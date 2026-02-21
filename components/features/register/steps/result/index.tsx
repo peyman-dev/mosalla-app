@@ -1,11 +1,12 @@
 "use client";
 import { useRegisterStore } from "@/core/stores/register.store";
-import { getCapacityDays } from "@/app/actions";
+import { cancelRegisteration, getCapacityDays } from "@/app/actions";
 import { Button } from "antd";
-import { Download } from "lucide-react";
+import { Download, X } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
 import TicketPDF from "@/components/common/ticket-pdf";
+import { toast } from "react-toastify";
 
 const ResultStep = () => {
   const {
@@ -121,7 +122,27 @@ const ResultStep = () => {
           </div>
         </div>
 
-        <div className="flex justify-center mt-16 sm:mt-24 md:mt-[220px] px-4">
+        <div className="flex justify-center gap-4 mt-16 sm:mt-24 md:mt-[220px] px-4">
+          <Button variant="solid" onClick={async () => {
+            const response = await cancelRegisteration(phoneNumber)
+            console.log(response);
+            
+            if (response?.ok) {
+              toast.success("رزرو شما با موفقیت لغو گردید")
+            } else {
+              toast.error(response?.error || "لغو رزرو شما با خطا مواجه شد")
+            }
+          }} className="
+               text-xl! 
+              font-yekanbakh! 
+              h-[56px]! sm:h-[60px]! 
+              font-bold! 
+              text-milky! 
+              px-6! sm:px-8! 
+              rounded-[20px]!
+          " icon={<X />} color="red">
+            انصراف رزروی
+          </Button>
           <Button
             onClick={handleDownload}
             className="

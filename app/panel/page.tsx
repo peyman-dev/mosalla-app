@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getUsers } from "@/app/actions";
 import UsersTable from "@/components/features/panel/features/users-table";
-import { Input, Select, Space, Button, Spin } from "antd";
+import { Input, Select, Space, Button, Spin, Flex } from "antd";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -53,10 +53,10 @@ export default function UsersPage() {
   
 
   return (
-    <div className="p-6 space-y-6" dir="rtl">
+    <div className="p-3 lg:p-6 space-y-6" dir="rtl">
       <h1 className="text-2xl font-bold">کاربران</h1>
 
-      <Space wrap className="gap-4">
+      <Flex justify="end" gap={12} wrap className="gap-4 mb-10! **:font-yekanbakh!" >
         <Search
           placeholder="جستجو در کد ملی..."
           value={nationalCode}
@@ -82,6 +82,12 @@ export default function UsersPage() {
           value={ramadanDay || undefined}
           onChange={(val) => setRamadanDay(val ?? "")}
           allowClear
+          className="**:font-yekanbakh!"
+          classNames={{
+            popup: {
+              listItem: "font-yekanbakh!"
+            }
+          }}
           style={{ width: 160 }}
           onClear={handleSearch}
         >
@@ -97,7 +103,7 @@ export default function UsersPage() {
         </Button>
 
         <Button onClick={handleReset}>پاک کردن</Button>
-      </Space>
+      </Flex>
 
       {isLoading ? (
         <div className="py-12 flex justify-center">

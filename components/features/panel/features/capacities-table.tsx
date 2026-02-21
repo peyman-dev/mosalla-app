@@ -1,11 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
-import { Table, Button, InputNumber, message, Tooltip } from "antd";
+import { Button, InputNumber, message, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { Pencil } from "lucide-react";
 import { toast } from "react-toastify";
+import { useState, useMemo, useCallback, useRef } from "react";
+import { AgGridReact } from "ag-grid-react";
+import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { setCapacities } from "@/app/actions";
+
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 type CapacityItem = {
   value: number;
@@ -15,20 +19,30 @@ type CapacityItem = {
   leftCapacity: number;
 };
 
-type Props = {
+interface Props {
   data: CapacityItem[];
   refetch: () => void;
-};
+}
 
-const CapacitiesTable = ({ data, refetch }: Props) => {
+const CapacitiesTable: React.FC<Props> = ({ data, refetch }) => {
   const [editingDay, setEditingDay] = useState<number | null>(null);
   const [newCapacity, setNewCapacity] = useState<number | null>(null);
   const [saving, setSaving] = useState<number | null>(null);
 
-  const handleEdit = (item: CapacityItem) => {
-    setEditingDay(item.value);
-    setNewCapacity(item.capacity);
-  };
+  const gridRef = useRef<any>(null);
+
+  const onGridReady = useCallback((params: any) => {
+    gridRef.current = params;
+    if (params.api) {
+      params.api.sizeColumnsToFit();
+    }
+  }, []);
+
+  const onGridSizeChanged = useCallback(() => {
+    if (gridRef.current?.api) {
+      gridRef.current.api.sizeColumnsToFit();
+    }
+  }, []);
 
   const handleSave = async (day: number) => {
     if (newCapacity === null || newCapacity < 0) {
@@ -44,8 +58,6 @@ const CapacitiesTable = ({ data, refetch }: Props) => {
         capacity: newCapacity,
       });
 
-      console.log("پاسخ setCapacities:", result);
-
       if (result?.ok) {
         toast.success(`ظرفیت روز ${day} با موفقیت به‌روزرسانی شد`);
         refetch();
@@ -55,118 +67,138 @@ const CapacitiesTable = ({ data, refetch }: Props) => {
         toast.error(result?.error?.error || "خطا در ذخیره ظرفیت");
       }
     } catch (err: any) {
-      console.error("خطا در setCapacities:", err);
       toast.error("خطا در ارتباط با سرور");
     } finally {
       setSaving(null);
     }
   };
 
-  const columns: ColumnsType<CapacityItem> = [
+  const columnDefs = useMemo(() => [
     {
-      title: "ردیف",
-      key: "index",
-      width: 80,
-      align: "center",
-      fixed: "left",
-      render: (_, __, idx) => idx + 1,
+      headerName: "ردیف",
+      valueGetter: "node.rowIndex + 1",
+      flex: 0.5,
+      minWidth: 70,
+      pinned: "right",
+      suppressMovable: true,
+      cellClass: "font-yekanbakh!"
     },
     {
-      title: "روز رمضان",
-      dataIndex: "label",
-      key: "label",
-      width: 180,
+      headerName: "روز رمضان",
+      field: "label",
+      flex: 1.4,
+      minWidth: 160,
+      cellClass: "font-yekanbakh!"
     },
     {
-      title: "ظرفیت کل",
-      key: "capacity",
-      width: 160,
-      align: "center",
-      render: (_, record) =>
-        editingDay === record.value ? (
-          <InputNumber
-            min={0}
-            value={newCapacity ?? undefined}
-            onChange={setNewCapacity}
-            disabled={saving !== null}
-            className="w-28"
-            controls={false}
-          />
-        ) : (
-          record.capacity.toLocaleString("fa-IR")
-        ),
-    },
-    {
-      title: "ظرفیت باقی‌مانده",
-      dataIndex: "leftCapacity",
-      key: "leftCapacity",
-      width: 180,
-      align: "center",
-      render: (val) => val.toLocaleString("fa-IR"),
-    },
-    {
-      title: "عملیات",
-      key: "action",
-      width: 140,
-      align: "center",
-      fixed: "right",
-      render: (_, record) =>
-        editingDay === record.value ? (
-          <div className="flex items-center justify-center gap-3">
-            <Button
-              type="primary"
-              size="small"
-              onClick={() => handleSave(record.value)}
-              loading={saving === record.value}
-              disabled={saving !== null && saving !== record.value}
-            >
-              {saving === record.value ? "در حال ذخیره..." : "ذخیره"}
-            </Button>
-
-            <Button
-              size="small"
-              danger
-              onClick={() => {
-                setEditingDay(null);
-                setNewCapacity(null);
-              }}
+      headerName: "ظرفیت کل",
+      field: "capacity",
+      flex: 1.1,
+      minWidth: 140,
+      cellClass: "font-yekanbakh!",
+      cellRenderer: (params: any) => {
+        const record = params.data;
+        if (editingDay === record.value) {
+          return (
+            <InputNumber
+              min={0}
+              value={newCapacity ?? undefined}
+              onChange={(val) => setNewCapacity(val ?? null)}
               disabled={saving !== null}
-            >
-              انصراف
-            </Button>
-          </div>
-        ) : (
-          <Tooltip title="ویرایش ظرفیت">
+              className="w-full font-yekanbakh!"
+              controls={false}
+            />
+          );
+        }
+        return params.value.toLocaleString("fa-IR");
+      },
+    },
+    {
+      headerName: "ظرفیت باقی‌مانده",
+      field: "leftCapacity",
+      flex: 1.2,
+      minWidth: 160,
+      cellClass: "font-yekanbakh!",
+      valueFormatter: (params: any) => params.value.toLocaleString("fa-IR"),
+    },
+    {
+      headerName: "عملیات",
+      flex: 0.9,
+      minWidth: 130,
+      pinned: "left",
+      cellRenderer: (params: any) => {
+        const record = params.data;
+        if (editingDay === record.value) {
+          return (
+            <div className="flex items-center justify-center gap-3 h-full">
+              <Button
+                type="primary"
+                size="small"
+                onClick={() => handleSave(record.value)}
+                loading={saving === record.value}
+                disabled={saving !== null && saving !== record.value}
+                className="font-yekanbakh!"
+              >
+                {saving === record.value ? "در حال ذخیره..." : "ذخیره"}
+              </Button>
+
+              <Button
+                size="small"
+                danger
+                onClick={() => {
+                  setEditingDay(null);
+                  setNewCapacity(null);
+                }}
+                disabled={saving !== null}
+                className="font-yekanbakh!"
+              >
+                انصراف
+              </Button>
+            </div>
+          );
+        }
+
+        return (
+          <Tooltip title="ویرایش ظرفیت" className="font-yekanbakh!">
             <Button
               type="text"
               icon={<Pencil size={18} />}
-              onClick={() => handleEdit(record)}
+              onClick={() => {
+                setEditingDay(record.value);
+                setNewCapacity(record.capacity);
+              }}
               disabled={saving !== null}
-              className="text-blue-600 hover:text-blue-800"
+              className="text-blue-600 hover:text-blue-800 font-yekanbakh!"
             />
           </Tooltip>
-        ),
+        );
+      },
     },
-  ];
+  ], [editingDay, newCapacity, saving, handleSave]);
 
   return (
-    <div dir="rtl" className="w-full overflow-x-auto">
-      <Table
-        columns={columns}
-        dataSource={data}
-        rowKey="value"
-        pagination={{
-          pageSize: 50,
-          total: data?.length,
-          showTotal: (total) => `تعداد کل: ${total}`,
+    <div
+      className="w-full font-yekanbakh ag-theme-quartz"
+      style={{ width: "100%", height: "600px" }}
+    >
+      <AgGridReact
+        ref={gridRef}
+        rowData={data}
+        columnDefs={columnDefs as any}
+        enableRtl={true}
+        pagination={true}
+        paginationPageSize={50}
+        defaultColDef={{
+          resizable: true,
+          sortable: true,
+          filter: true,
+          autoHeight: true,
+          headerClass: "font-yekanbakh!",
+          minWidth: 80,
         }}
-        scroll={{ x: 900 }}
-        size="middle"
-        bordered
-        className="ant-table-rtl min-w-[900px] **:font-yekanbakh!"
-        locale={{
-          emptyText: "داده‌ای برای نمایش وجود ندارد",
-        }}
+        onGridReady={onGridReady}
+        onGridSizeChanged={onGridSizeChanged}
+        overlayNoRowsTemplate='<span class="font-yekanbakh!">داده‌ای برای نمایش وجود ندارد</span>'
       />
     </div>
   );

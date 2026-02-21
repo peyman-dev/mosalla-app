@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 const Timer = () => {
     const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
-    const IFTAR_TIME = { hour: 18, minute: 18 };
+    const IFTAR_TIME = { hour: 16, minute: 18 };
 
     useEffect(() => {
         const calculateTimeLeft = () => {

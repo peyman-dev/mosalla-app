@@ -1,3 +1,4 @@
+import HamburgerMenu from "@/components/features/panel/common/hamburger-menu";
 import Sidebar from "@/components/features/panel/common/sidebar";
 import QueryProvider from "@/components/providers/query.provider";
 import { Metadata } from "next";
@@ -13,8 +14,8 @@ const Layout = ({ children }: { children: ReactNode }) => {
   return <QueryProvider>
     <main id="admin-page" className="flex items-start gap-10" >
       <Sidebar />
-      <section className="relative py-10 h-dvh grow" id="admin-content">
-
+      <section className="relative py-5 lg:py-10 h-dvh grow" id="admin-content">
+        <HamburgerMenu />
         <div className="w-full h-[90%] overflow-y-auto overflow-x-hidden relative">
           {children}
         </div>
