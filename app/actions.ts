@@ -314,6 +314,12 @@ export const updateAttendeesCount = async (payload: {
     const response = await request.post(
       "/admin/users/attendees-count/set/",
       payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
     );
     const data = await response.data;
     return data;
