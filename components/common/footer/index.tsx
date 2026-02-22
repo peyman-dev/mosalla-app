@@ -45,7 +45,7 @@ const Footer = () => {
             </div>
             <div className="text-xs mt-10 flex-center">
                 <p className="font-bold!">
-                    توسعه یافته توسط تیم <Link href="https://favajco.ir" target="_blank" className="text-primary underline">فاواج</Link>
+                    توسعه یافته توسط تیم <Link href="https://favajco.ir"  className="text-primary underline">فاواج</Link>
                 </p>
 
             </div>

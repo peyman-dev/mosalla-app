@@ -1,5 +1,4 @@
 "use client";
-
 import { Button, InputNumber, message, Tooltip } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { Pencil } from "lucide-react";
@@ -28,7 +27,6 @@ const CapacitiesTable: React.FC<Props> = ({ data, refetch }) => {
   const [editingDay, setEditingDay] = useState<number | null>(null);
   const [newCapacity, setNewCapacity] = useState<number | null>(null);
   const [saving, setSaving] = useState<number | null>(null);
-
   const gridRef = useRef<any>(null);
 
   const onGridReady = useCallback((params: any) => {
@@ -49,15 +47,12 @@ const CapacitiesTable: React.FC<Props> = ({ data, refetch }) => {
       message.error("لطفاً یک عدد معتبر وارد کنید");
       return;
     }
-
     setSaving(day);
-
     try {
       const result = await setCapacities({
         ramadan_day: day,
         capacity: newCapacity,
       });
-
       if (result?.ok) {
         toast.success(`ظرفیت روز ${day} با موفقیت به‌روزرسانی شد`);
         refetch();
@@ -87,14 +82,14 @@ const CapacitiesTable: React.FC<Props> = ({ data, refetch }) => {
       headerName: "روز رمضان",
       field: "label",
       flex: 1.4,
-      minWidth: 160,
+      minWidth: 140,
       cellClass: "font-yekanbakh!"
     },
     {
       headerName: "ظرفیت کل",
       field: "capacity",
       flex: 1.1,
-      minWidth: 140,
+      minWidth: 120,
       cellClass: "font-yekanbakh!",
       cellRenderer: (params: any) => {
         const record = params.data;
@@ -117,20 +112,24 @@ const CapacitiesTable: React.FC<Props> = ({ data, refetch }) => {
       headerName: "ظرفیت باقی‌مانده",
       field: "leftCapacity",
       flex: 1.2,
-      minWidth: 160,
+      minWidth: 140,
       cellClass: "font-yekanbakh!",
       valueFormatter: (params: any) => params.value.toLocaleString("fa-IR"),
     },
     {
       headerName: "عملیات",
-      flex: 0.9,
-      minWidth: 130,
+      width: 110,
+      minWidth: 110,
+      maxWidth: 130,
       pinned: "left",
+      suppressSizeToFit: true,
+      suppressMovable: true,
+      cellClass: "font-yekanbakh! flex items-center justify-center",
       cellRenderer: (params: any) => {
         const record = params.data;
         if (editingDay === record.value) {
           return (
-            <div className="flex items-center justify-center gap-3 h-full">
+            <div className="flex items-center justify-center gap-2 h-full px-1">
               <Button
                 type="primary"
                 size="small"
@@ -139,9 +138,8 @@ const CapacitiesTable: React.FC<Props> = ({ data, refetch }) => {
                 disabled={saving !== null && saving !== record.value}
                 className="font-yekanbakh!"
               >
-                {saving === record.value ? "در حال ذخیره..." : "ذخیره"}
+                {saving === record.value ? "ذخیره..." : "ذخیره"}
               </Button>
-
               <Button
                 size="small"
                 danger
@@ -157,9 +155,8 @@ const CapacitiesTable: React.FC<Props> = ({ data, refetch }) => {
             </div>
           );
         }
-
         return (
-          <Tooltip title="ویرایش ظرفیت" className="font-yekanbakh!">
+          <Tooltip title="ویرایش ظرفیت">
             <Button
               type="text"
               icon={<Pencil size={18} />}

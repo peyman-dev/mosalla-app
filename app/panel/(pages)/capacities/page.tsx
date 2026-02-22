@@ -11,6 +11,9 @@ const CapacitiesPage = () => {
         staleTime: 2 * 60 * 1000, // ۲ دقیقه
     });
 
+    console.log(data);
+    
+
     return (
         <div className="p-6">
             <div className="flex items-center justify-between mb-6">

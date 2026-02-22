@@ -81,7 +81,7 @@ const AddFamilyStep = () => {
             try {
                 const res = await getCapacityDays();
                 console.log(res);
-                
+
 
                 if (ignore) return;
 
@@ -169,7 +169,7 @@ const AddFamilyStep = () => {
 
         const response = await addFamilyMembers(payload);
         console.log(response);
-        
+
 
         if (response?.ok) {
             toast.success("ثبت‌نام با موفقیت انجام شد");
@@ -343,7 +343,7 @@ const AddFamilyStep = () => {
                         <div className="space-y-4">
                             <p className="text-2xl md:text-3xl font-IranNastaliq! text-white">اطلاعات همراهان</p>
                             <p className="text-lg md:text-xl font-bold text-white">
-                                کد ملی اعضای همراه خود را وارد کنید 
+                                کد ملی اعضای همراه خود را وارد کنید
                             </p>
                             <Button
                                 htmlType="button"
@@ -358,7 +358,7 @@ const AddFamilyStep = () => {
                         <div className="space-y-6 max-h-[400px] overflow-y-auto mt-8 pr-2 custom-scrollbar">
                             {fields.map((field, index) => (
                                 <div key={field.id} className="flex flex-col gap-3 animate-in fade-in duration-300">
-                                    <div className="flex justify-between items-center">
+                                    <div className="flex justify-between  items-center">
                                         <label className="select-none text-lg text-[#FFF3E2]">کد ملی همراه {index + 1}</label>
                                         <Trash2
                                             size={20}

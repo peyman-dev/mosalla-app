@@ -1,4 +1,4 @@
-import { Clock4, IdCard, MapPin } from "lucide-react";
+import { Clock4, DoorOpen, IdCard, MapPin } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -28,7 +28,7 @@ const HeroSection = () => {
 
                     <div className="flex-col-center lg:flex-ic gap-3">
                         <div className="flex-ic gap-1 text-[#90541D] font-bold lg:min-w-[140px] justify-end ">
-                            <MapPin size={21} />
+                            <Clock4 size={21} />
                             تاریخ و ساعت:
                         </div>
                         <p className="font-bold">
@@ -37,7 +37,7 @@ const HeroSection = () => {
                     </div>
                     <div className="flex-col-center lg:flex-ic gap-3">
                         <div className="flex-ic gap-1 text-[#90541D] font-bold lg:min-w-[140px] justify-end ">
-                            <Clock4 size={21} />
+                            <DoorOpen size={21} />
                             زمان پذیرش:
                         </div>
                         <p className="font-bold">
@@ -47,10 +47,10 @@ const HeroSection = () => {
                 </div>
             </div>
             <div className="flex-center gap-2 lg:gap-4 mt-[59px]! lg:flex-row flex-col-reverse *:w-full! *:md:max-w-max w-[80%] mx-auto **:flex-center">
-                <Link className="bg-primary-green flex-center gap-1.5 text-lg  py-2.5 px-3.75 text-white rounded-[10px]" href="/inquiry">
+                {/* <Link className="bg-primary-green flex-center gap-1.5 text-lg  py-2.5 px-3.75 text-white rounded-[10px]" href="/inquiry">
                     <IdCard />
                     استعلام ثبت نام
-                </Link>
+                </Link> */}
                 <Link className="bg-primary-green text-lg  py-2.5 px-3.75 text-white rounded-[10px]" href="/registeration">
                     ثبت نام در افطاری
                 </Link>

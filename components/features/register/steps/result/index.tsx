@@ -144,7 +144,7 @@ const ResultStep = () => {
           </div>
         </div>
 
-        <div className="flex justify-center gap-4 mt-16 sm:mt-24 px-4">
+        <div className="flex justify-center md:flex-row flex-col gap-4 mt-16 sm:mt-24 px-4">
           <Button
             onClick={async () => {
               if (!hasData) {

@@ -136,18 +136,18 @@ const TicketPDF: React.FC<TicketPDFProps> = ({
                     <Text style={styles.title}>کارت ورود - ماه رمضان</Text>
                     <Text style={styles.subtitle}>ثبت‌نام با موفقیت انجام شد</Text>
                 </View>
-
+{/* 
                 <View style={styles.trackingBox}>
                     <Text style={styles.trackingLabel}>کد پیگیری</Text>
                     <Text style={styles.trackingCode}>{trackingCode}</Text>
-                </View>
+                </View> */}
 
                 <Text style={styles.sectionTitle}>اطلاعات رزرو</Text>
                 <View>
                     <View style={styles.row}>
                         <Text style={styles.label}>روز ماه رمضان</Text>
                         <Text style={styles.value}>
-                            {ramadanDay ? `روز ${ramadanDay}` : "—"}
+                            {ramadanDay ? `روز ${ramadanDay} رمضان` : "—"}
                         </Text>
                     </View>
                     <View style={styles.row}>

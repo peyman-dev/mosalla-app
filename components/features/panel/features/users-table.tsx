@@ -1,5 +1,4 @@
 "use client";
-
 import { Button, Tag, Tooltip, Modal, Input, Flex } from "antd";
 import { UserKey } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,6 +22,7 @@ interface UserRecord {
   trackingCode: string;
   submittedAt: string;
   familyNationalCodes: string[];
+  attendeesCount: number;
 }
 
 interface Props {
@@ -36,7 +36,6 @@ const UsersTable: React.FC<Props> = ({ data }) => {
     count: 0
   });
   const [o, t] = useToggle();
-
   const gridRef = useRef<any>(null);
 
   const mutation = useMutation({
@@ -45,8 +44,6 @@ const UsersTable: React.FC<Props> = ({ data }) => {
       attendees_count: count
     }),
     onSuccess: (response) => {
-      console.log(response);
-      
       if (response.ok) {
         toast.success(`تعداد نفرات کاربر ${response.data?.phone || "کاربر"} با موفقیت بروزرسانی شد`);
         queryClient.invalidateQueries({ queryKey: ["users"] });
@@ -75,68 +72,60 @@ const UsersTable: React.FC<Props> = ({ data }) => {
   const columnDefs = useMemo(() => [
     {
       headerName: "ردیف",
-      
       valueGetter: "node.rowIndex + 1",
-      flex: 0.5,
-      minWidth: 60,
+      flex: 0.2,
+      minWidth: 40,
       pinned: "right",
       suppressMovable: true,
       cellClass: "font-yekanbakh!"
     },
     {
       headerName: "نام و نام خانوادگی",
-      
       field: "fullName",
       flex: 2,
-      minWidth: 180,
+      minWidth: 170,
       cellClass: "font-yekanbakh!"
     },
     {
       headerName: "کد ملی",
-      
       field: "nationalCode",
-      flex: 1.2,
-      minWidth: 120,
-      cellClass: "font-yekanbakh!"
-    },
-    {
-      headerName: "شماره همراه",
-      
-      field: "phone",
-      flex: 1.3,
-      minWidth: 130,
-      cellClass: "font-yekanbakh!"
-    },
-    {
-      headerName: "روز رمضان",
-      
-      field: "ramadanDayLabel",
-      flex: 0.9,
-      minWidth: 100,
-      cellRenderer: (params: any) => <Tag color="blue" className="font-yekanbakh!">{params.value}</Tag>,
-    },
-    {
-      headerName: "تاریخ حضور",
-      
-      field: "attendanceDateShamsi",
       flex: 1.1,
       minWidth: 110,
       cellClass: "font-yekanbakh!"
     },
     {
-      headerName: "کد رهگیری",
-      
-      field: "trackingCode",
+      headerName: "شماره همراه",
+      field: "phone",
+      flex: 1.2,
+      minWidth: 120,
+      cellClass: "font-yekanbakh!"
+    },
+    {
+      headerName: "روز رمضان",
+      field: "ramadanDayLabel",
+      flex: 0.8,
+      minWidth: 95,
+      cellRenderer: (params: any) => <Tag color="blue" className="font-yekanbakh!">{params.value}</Tag>,
+    },
+    {
+      headerName: "تاریخ حضور",
+      field: "attendanceDateShamsi",
       flex: 1,
-      minWidth: 110,
+      minWidth: 105,
+      cellClass: "font-yekanbakh!"
+    },
+    {
+      headerName: "کد رهگیری",
+      field: "trackingCode",
+      flex: 0.9,
+      minWidth: 105,
       cellClass: "font-yekanbakh!"
     },
     {
       headerName: "کد ملی خانواده",
-      
       field: "familyNationalCodes",
-      flex: 1.4,
-      minWidth: 160,
+      flex: 1.3,
+      minWidth: 150,
       cellRenderer: (params: any) => {
         const codes = params.value;
         return codes?.length > 0 ? (
@@ -153,22 +142,46 @@ const UsersTable: React.FC<Props> = ({ data }) => {
       },
     },
     {
+      headerName: "تعداد نفرات حاضر",
+      field: "attendeesCount",
+      flex: 0.9,
+      minWidth: 110,
+      cellClass: "font-yekanbakh! text-center font-medium",
+      cellRenderer: (params: any) => {
+        const count = params.value;
+        let color = "default";
+        if (count >= 1 && count <= 3) color = "green";
+        else if (count >= 4 && count <= 7) color = "blue";
+        else if (count >= 8) color = "orange";
+
+        return count ? (
+          <Tag color={color} className="font-yekanbakh! min-w-[3rem] text-center">
+            {count.toLocaleString("fa-IR")} نفر
+          </Tag>
+        ) : (
+          <span className="text-gray-400">—</span>
+        );
+      },
+    },
+    {
       headerName: "ثبت شده در",
-      
       field: "submittedAt",
-      flex: 1.3,
-      minWidth: 140,
+      flex: 1.2,
+      minWidth: 130,
       cellClass: "font-yekanbakh!",
       valueFormatter: (params: any) => new Date(params.value).toLocaleString("fa-IR"),
     },
     {
       headerName: "عملیات",
-      
-      flex: 0.7,
+      width: 80,
       minWidth: 80,
+      maxWidth: 90,
       pinned: "left",
+      suppressSizeToFit: true,
+      suppressMovable: true,
+      cellClass: "font-yekanbakh! flex items-center justify-center",
       cellRenderer: (params: any) => (
-        <Tooltip title="تعداد نفرات حاضر" className="font-yekanbakh!">
+        <Tooltip title="تعداد نفرات حاضر">
           <Button
             type="text"
             icon={<UserKey size={18} />}
@@ -189,8 +202,8 @@ const UsersTable: React.FC<Props> = ({ data }) => {
   ], [mutation.isPending, t]);
 
   return (
-    <div 
-      className="w-full font-yekanbakh ag-theme-quartz" 
+    <div
+      className="w-full font-yekanbakh ag-theme-quartz"
       style={{ width: "100%", height: "600px" }}
     >
       <AgGridReact
@@ -206,13 +219,12 @@ const UsersTable: React.FC<Props> = ({ data }) => {
           filter: true,
           autoHeight: true,
           headerClass: "font-yekanbakh!",
-          minWidth: 80,           // حداقل عرض کلی برای همه ستون‌ها
+          minWidth: 80,
         }}
         onGridReady={onGridReady}
         onGridSizeChanged={onGridSizeChanged}
         overlayNoRowsTemplate='<span class="font-yekanbakh!">داده‌ای برای نمایش وجود ندارد</span>'
       />
-
       <Modal
         open={o}
         onCancel={t}
