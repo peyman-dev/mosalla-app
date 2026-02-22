@@ -176,7 +176,7 @@ const NationalsTable = () => {
             <Input placeholder="مثال: 0012345678" maxLength={10} />
           </Form.Item>
 
-          <Form.Item label="یادداشت (اختیاری)" name="note">
+          <Form.Item label="یادداشت " name="note">
             <Input.TextArea placeholder="دلیل افزودن، منبع، یا توضیحات..." rows={2} />
           </Form.Item>
 

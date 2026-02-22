@@ -343,7 +343,7 @@ const AddFamilyStep = () => {
                         <div className="space-y-4">
                             <p className="text-2xl md:text-3xl font-IranNastaliq! text-white">اطلاعات همراهان</p>
                             <p className="text-lg md:text-xl font-bold text-white">
-                                کد ملی اعضای همراه خود را وارد کنید (اختیاری)
+                                کد ملی اعضای همراه خود را وارد کنید 
                             </p>
                             <Button
                                 htmlType="button"
