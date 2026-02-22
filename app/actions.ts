@@ -314,12 +314,6 @@ export const updateAttendeesCount = async (payload: {
     const response = await request.post(
       "/admin/users/attendees-count/set/",
       payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      },
     );
     const data = await response.data;
     return data;
@@ -331,21 +325,21 @@ export const updateAttendeesCount = async (payload: {
 export const cancelRegisteration = async (phone: string) => {
   try {
     const response = await request.post(
-      "/user/cancel-registeration/",
+      "/user/cancel-registration/",
       JSON.stringify({
         mobile: phone,
       }),
       {
         headers: {
           "Content-Type": "application/json",
-        },
-      },
+        }
+      }
     );
     const data = await response.data;
     return data;
   } catch (error) {
     console.log(error);
-    
+
     return parseThis(error);
   }
 };

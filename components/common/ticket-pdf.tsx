@@ -12,13 +12,11 @@ Font.register({
     family: "YekanBakh",
     src: "/fonts/YekanBakhFaNum-Regular.woff",
 });
-
 Font.register({
     family: "YekanBakh",
     src: "/fonts/YekanBakhFaNum-SemiBold.woff",
     fontWeight: "semibold",
 });
-
 Font.register({
     family: "YekanBakh",
     src: "/fonts/YekanBakhFaNum-Bold.woff",
@@ -27,83 +25,86 @@ Font.register({
 
 const styles = StyleSheet.create({
     page: {
-        padding: 50,
+        padding: 60,
         fontFamily: "YekanBakh",
         direction: "rtl",
-        backgroundColor: "#184642",
+        backgroundColor: "#0f2525",
         color: "#f1f5f9",
     },
-    title: {
-        fontSize: 38,
-        textAlign: "center",
-        color: "#4EF393",
-        marginTop: 40,
-        marginBottom: 20,
-        fontWeight: "bold",
+    header: {
+        marginBottom: 40,
     },
-    trackingContainer: {
-        flexDirection: "row",
-        justifyContent: "center",
+    title: {
+        fontSize: 36,
+        textAlign: "center",
+        color: "#4ade80",
+        fontWeight: "bold",
+        marginBottom: 8,
+    },
+    subtitle: {
+        fontSize: 18,
+        textAlign: "center",
+        color: "#a3e635",
+        marginBottom: 30,
+    },
+    trackingBox: {
+        backgroundColor: "#0a1a1a",
+        borderWidth: 1.5,
+        borderColor: "#4ade80",
+        borderRadius: 10,
+        padding: 20,
+        marginBottom: 40,
         alignItems: "center",
-        marginVertical: 30,
-        fontSize: 22,
     },
     trackingLabel: {
-        color: "#e2e8f0",
-        paddingLeft: "6px",
-        paddingRight: "6px",
+        fontSize: 20,
+        color: "#d1fae5",
+        marginBottom: 10,
     },
-    codeBox: {
-        backgroundColor: "#0f2a2a",
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 8,
-        marginLeft: 12,
-    },
-    codeText: {
-        fontSize: 22,
-        color: "#e0f2fe",
-        fontWeight: "semibold",
+    trackingCode: {
+        fontSize: 28,
+        fontWeight: "bold",
+        color: "#ecfdf5",
+        letterSpacing: 1.5,
     },
     sectionTitle: {
-        fontSize: 26,
-        color: "#cbd5e1",
-        marginTop: 40,
-        marginBottom: 16,
-        textAlign: "right",
+        fontSize: 22,
+        color: "#a3e635",
         fontWeight: "bold",
+        marginBottom: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: "#2a5a5a",
+        paddingBottom: 8,
     },
-    infoRow: {
-        flexDirection: "row-reverse",          // مهم ← اینجا جهت را برعکس کردیم
-        justifyContent: "flex-start",
-        alignItems: "center",
+    row: {
+        flexDirection: "row-reverse",
+        justifyContent: "space-between",
         marginBottom: 14,
-        fontSize: 20,
+        fontSize: 18,
+        paddingVertical: 4,
     },
     label: {
-        width: 160,
+        width: 180,
         color: "#94a3b8",
         textAlign: "right",
-        marginLeft: 20,                        // فاصله از مقدار
     },
     value: {
         flex: 1,
-        textAlign: "left",                     // مقدار سمت چپ (در چیدمان RTL طبیعی است)
-        fontWeight: "semibold",
+        textAlign: "left",
         color: "#f8fafc",
+        fontWeight: "semibold",
     },
-    familyRow: {
-        flexDirection: "row-reverse",          // مهم
-        justifyContent: "flex-start",
-        alignItems: "center",
-        marginBottom: 12,
-        fontSize: 20,
-    },
-    emptyMessage: {
-        fontSize: 20,
-        color: "#94a3b8",
+    footer: {
+        position: "absolute",
+        bottom: 40,
+        left: 60,
+        right: 60,
         textAlign: "center",
-        marginTop: 20,
+        color: "#64748b",
+        fontSize: 13,
+        borderTopWidth: 1,
+        borderTopColor: "#2a5a5a",
+        paddingTop: 12,
     },
 });
 
@@ -111,58 +112,87 @@ interface TicketPDFProps {
     registerer: {
         phone: string;
         nationalCode: string;
-        fullName: string;     // اضافه شد
+        fullName: string;
     };
     familyMembers: string[];
     trackingCode: string;
+    ramadanDay?: number;
+    attendanceDate?: string;     // ← جدید
+    submittedAt?: string;
 }
 
 const TicketPDF: React.FC<TicketPDFProps> = ({
     registerer,
     familyMembers,
     trackingCode,
+    ramadanDay,
+    attendanceDate,
+    submittedAt,
 }) => {
     return (
         <Document>
             <Page size="A4" style={styles.page}>
-                <Text style={styles.title}>ثبت نام تکمیل شد</Text>
+                <View style={styles.header}>
+                    <Text style={styles.title}>کارت ورود - ماه رمضان</Text>
+                    <Text style={styles.subtitle}>ثبت‌نام با موفقیت انجام شد</Text>
+                </View>
 
-                <View style={styles.trackingContainer}>
-                    <View style={styles.codeBox}>
-                        <Text style={styles.codeText}>{trackingCode}</Text>
-                    </View>
+                <View style={styles.trackingBox}>
                     <Text style={styles.trackingLabel}>کد پیگیری</Text>
+                    <Text style={styles.trackingCode}>{trackingCode}</Text>
                 </View>
 
-                <Text style={styles.sectionTitle}>اطلاعات شخص ثبت نام کننده</Text>
-
-                <View style={styles.infoRow}>
-                    <Text style={styles.label}>نام و نام خانوادگی</Text>
-                    <Text style={styles.value}>{registerer.fullName}</Text>
+                <Text style={styles.sectionTitle}>اطلاعات رزرو</Text>
+                <View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>روز ماه رمضان</Text>
+                        <Text style={styles.value}>
+                            {ramadanDay ? `روز ${ramadanDay}` : "—"}
+                        </Text>
+                    </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>تاریخ حضور</Text>
+                        <Text style={styles.value}>{attendanceDate || "—"}</Text>
+                    </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>زمان ثبت‌نام</Text>
+                        <Text style={styles.value}>{submittedAt || "—"}</Text>
+                    </View>
                 </View>
 
-                <View style={styles.infoRow}>
-                    <Text style={styles.label}>شماره همراه</Text>
-                    <Text style={styles.value}>{registerer.phone}</Text>
+                <Text style={styles.sectionTitle}>مشخصات ثبت‌کننده</Text>
+                <View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>نام و نام خانوادگی</Text>
+                        <Text style={styles.value}>{registerer.fullName || "—"}</Text>
+                    </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>شماره همراه</Text>
+                        <Text style={styles.value}>{registerer.phone || "—"}</Text>
+                    </View>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>کد ملی</Text>
+                        <Text style={styles.value}>{registerer.nationalCode || "—"}</Text>
+                    </View>
                 </View>
 
-                <View style={styles.infoRow}>
-                    <Text style={styles.label}>کدملی</Text>
-                    <Text style={styles.value}>{registerer.nationalCode}</Text>
-                </View>
-
-                <Text style={styles.sectionTitle}>اعضای مهمان یا خانواده</Text>
-
+                <Text style={styles.sectionTitle}>همراهان / اعضای خانواده</Text>
                 {familyMembers.length > 0 ? (
-                    familyMembers.map((code, index) => (
-                        <View key={index} style={styles.familyRow}>
-                            <Text style={styles.label}>کد ملی مهمان {index + 1}</Text>
+                    familyMembers.map((code, i) => (
+                        <View key={i} style={styles.row}>
+                            <Text style={styles.label}>کد ملی نفر {i + 1}</Text>
                             <Text style={styles.value}>{code}</Text>
                         </View>
                     ))
                 ) : (
-                    <Text style={styles.emptyMessage}>مهمانی ثبت نشده است</Text>
+                    <Text style={{ fontSize: 18, color: "#94a3b8", textAlign: "center", marginTop: 20 }}>
+                        هیچ همراهی ثبت نشده است
+                    </Text>
                 )}
+
+                <Text style={styles.footer}>
+                    این کارت تنها برای احراز هویت در روز حضور معتبر است • لطفاً نسخه چاپ‌شده یا دیجیتال آن را همراه داشته باشید
+                </Text>
             </Page>
         </Document>
     );

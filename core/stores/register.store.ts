@@ -9,7 +9,7 @@ interface ConfirmationData {
   registrant: Record<string, any>;
   attendance: {
     ramadan_day: number;
-    attendance_timestamp: string;
+    attendance_date_shamsi: string;
   };
   family_national_codes: string[];
 }

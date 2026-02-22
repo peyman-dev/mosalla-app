@@ -1,6 +1,6 @@
 "use client";
 import { useRegisterStore } from "@/core/stores/register.store";
-import { cancelRegisteration, getCapacityDays } from "@/app/actions";
+import { cancelRegisteration } from "@/app/actions";
 import { Button } from "antd";
 import { Download, X } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
@@ -10,139 +10,170 @@ import { toast } from "react-toastify";
 
 const ResultStep = () => {
   const {
-    phoneNumber,
-    fullName,
-    nationalCode,
-    familyMembers,
+    phoneNumber = "",
+    fullName = "",
+    nationalCode = "",
     registrationResult,
   } = useRegisterStore();
 
-  if (!registrationResult) {
-    return (
-      <div className="pt-20 text-center text-white text-xl">
-        نتیجه ثبت‌نام یافت نشد...
-      </div>
-    );
-  }
+  const hasData = !!registrationResult;
 
-  const { tracking_code, registrant, family_national_codes } = registrationResult;
+  const tracking_code = registrationResult?.tracking_code || "—";
+  const submitted_at = registrationResult?.submitted_at
+    ? new Date(registrationResult.submitted_at).toLocaleString("fa-IR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).replace(/،/g, "")
+    : "—";
+
+  const ramadanDay = registrationResult?.attendance?.ramadan_day ?? null;
+  const attendanceDateShamsi = registrationResult?.attendance?.attendance_date_shamsi || "—";
+
+  const family_national_codes = registrationResult?.family_national_codes || [];
 
   const handleDownload = async () => {
+    if (!hasData) {
+      toast.info("اطلاعات کامل بارگذاری نشده است");
+      return;
+    }
+
     try {
       const blob = await pdf(
         <TicketPDF
-          registerer={{
-            phone: phoneNumber,
-            nationalCode: nationalCode,
-            fullName,
-          }}
-          familyMembers={family_national_codes || []}
+          registerer={{ phone: phoneNumber, nationalCode, fullName }}
+          familyMembers={family_national_codes}
           trackingCode={tracking_code}
+          ramadanDay={ramadanDay ?? undefined}
+          attendanceDate={attendanceDateShamsi}
+          submittedAt={submitted_at}
         />
       ).toBlob();
 
       saveAs(blob, `کارت-ورود-${tracking_code}.pdf`);
-    } catch (error) {
-      console.error("خطا در ساخت PDF:", error);
-      alert("متأسفانه مشکلی پیش آمد. دوباره امتحان کنید.");
+    } catch (err) {
+      console.error(err);
+      toast.error("خطا در ساخت فایل PDF");
     }
   };
 
   return (
-    <div className="pt-4 w-full">
-      <div className="space-y-8 sm:space-y-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center space-y-6 sm:space-y-8">
-          <p className="text-[#4EF393] font-IranNastaliq text-4xl sm:text-5xl font-bold">
-            ثبت نام تکمیل شد
-          </p>
+    <div className="pt-6 pb-12 w-full min-h-screen bg-gradient-to-b from-[#0f2a2a] to-[#184642]">
+      <div className="px-5 sm:px-8 lg:px-12 max-w-5xl mx-auto space-y-10">
 
-          <div className="flex items-center justify-center gap-3 text-lg sm:text-xl">
-            <p>کد پیگیری:</p>
-            <p>
-              <code className="font-mono bg-gray-800 px-2 py-1 rounded">
-                {tracking_code}
-              </code>
-            </p>
+        <div className="text-center space-y-5">
+          <h1 className="text-[#4EF393] font-bold text-4xl sm:text-5xl tracking-tight font-yekanbakh">
+            ثبت‌نام با موفقیت انجام شد
+          </h1>
+
+          <div className="inline-flex items-center gap-3 bg-black/30 px-6 py-3 rounded-2xl border border-[#4EF393]/30">
+            <span className="text-gray-300 text-lg">کد پیگیری:</span>
+            <code className="bg-[#0a1f1f] text-[#e0f2fe] px-4 py-1.5 rounded-lg text-xl font-mono font-semibold">
+              {tracking_code}
+            </code>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 mt-12 sm:mt-16 lg:mt-20 w-full max-w-5xl mx-auto px-2 sm:px-0">
-          {/* ثبت‌نام کننده */}
-          <div className="space-y-8 sm:space-y-10">
-            <p className="text-white font-IranNastaliq text-xl sm:text-2xl font-medium text-center md:text-right">
-              اطلاعات شخص ثبت نام کننده
-            </p>
+        <div className="bg-[#112f2f] border border-[#2a5a5a]/60 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-[#1a3d3d] to-[#143535] px-6 py-5 border-b border-[#2a5a5a]/40">
+            <h2 className="text-[#d1fae5] text-xl sm:text-2xl font-bold text-center">
+              اطلاعات رزرو
+            </h2>
+          </div>
 
-            <div className="space-y-5 text-base sm:text-xl">
-              <div className="flex items-center gap-4 justify-between md:justify-start sm:gap-20">
-                <p className="w-[130px] sm:w-[140px] shrink-0">شماره همراه:</p>
-                <p className="font-medium">{phoneNumber}</p>
+          <div className="p-6 sm:p-8 space-y-5 text-base sm:text-lg">
+            <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+              <span className="text-gray-300">روز ماه رمضان</span>
+              <span className="font-bold text-[#4EF393]">
+                {ramadanDay !== null ? `روز ${ramadanDay}` : "—"}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center py-2 border-b border-gray-700/50">
+              <span className="text-gray-300">تاریخ حضور</span>
+              <span className="font-medium text-white">{attendanceDateShamsi}</span>
+            </div>
+
+            <div className="flex justify-between items-center py-2">
+              <span className="text-gray-300">زمان ثبت‌نام</span>
+              <span className="text-gray-400">{submitted_at}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-7 lg:gap-10">
+          <div className="bg-[#112f2f]/80 border border-[#2a5a5a]/40 rounded-xl p-6">
+            <h3 className="text-[#cbd5e1] text-xl font-bold mb-5 text-center md:text-right">
+              اطلاعات ثبت‌کننده
+            </h3>
+            <div className="space-y-4 text-base">
+              <div className="flex justify-between">
+                <span className="text-gray-400 min-w-[110px]">نام و نام خانوادگی</span>
+                <span className="font-medium text-right">{fullName || "—"}</span>
               </div>
-
-              <div className="flex items-center gap-4 justify-between md:justify-start sm:gap-20">
-                <p className="w-[130px] sm:w-[140px] shrink-0">کدملی:</p>
-                <p className="font-medium">{nationalCode}</p>
+              <div className="flex justify-between">
+                <span className="text-gray-400 min-w-[110px]">شماره همراه</span>
+                <span className="font-medium">{phoneNumber || "—"}</span>
               </div>
-
-              {/* اگر اطلاعات بیشتری از registrant داری می‌تونی اینجا اضافه کنی */}
-              {registrant?.birthDate && (
-                <div className="flex items-center gap-4 justify-between md:justify-start sm:gap-20">
-                  <p className="w-[130px] sm:w-[140px] shrink-0">تاریخ تولد:</p>
-                  <p className="font-medium">{registrant.birthDate}</p>
-                </div>
-              )}
+              <div className="flex justify-between">
+                <span className="text-gray-400 min-w-[110px]">کد ملی</span>
+                <span className="font-medium">{nationalCode || "—"}</span>
+              </div>
             </div>
           </div>
 
-          {/* اعضای خانواده / مهمان */}
-          <div className="space-y-8 sm:space-y-10">
-            <p className="text-white font-IranNastaliq text-xl sm:text-2xl font-medium text-center md:text-right">
-              اعضای مهمان یا خانواده
-            </p>
-
-            <div className="space-y-5 text-base sm:text-xl">
-              {family_national_codes?.length > 0 ? (
-                family_national_codes.map((code: string, i: number) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-4 justify-between md:justify-start sm:gap-20"
-                  >
-                    <p className="w-[170px] sm:w-[190px] shrink-0">
-                      کد ملی مهمان {i + 1}:
-                    </p>
-                    <p className="font-medium">{code}</p>
+          <div className="bg-[#112f2f]/80 border border-[#2a5a5a]/40 rounded-xl p-6">
+            <h3 className="text-[#cbd5e1] text-xl font-bold mb-5 text-center md:text-right">
+              همراهان / اعضای خانواده
+            </h3>
+            {family_national_codes.length > 0 ? (
+              <div className="space-y-4">
+                {family_national_codes.map((code, i) => (
+                  <div key={i} className="flex justify-between">
+                    <span className="text-gray-400 min-w-[140px]">کد ملی نفر {i + 1}</span>
+                    <span className="font-medium">{code}</span>
                   </div>
-                ))
-              ) : (
-                <p className="text-gray-400 text-center pt-4">
-                  مهمانی ثبت نشده است
-                </p>
-              )}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-6">همراهی ثبت نشده است</p>
+            )}
           </div>
         </div>
 
-        <div className="flex justify-center gap-4 mt-16 sm:mt-24 md:mt-[220px] px-4">
-          <Button variant="solid" onClick={async () => {
-            const response = await cancelRegisteration(phoneNumber)
-            console.log(response);
-            
-            if (response?.ok) {
-              toast.success("رزرو شما با موفقیت لغو گردید")
-            } else {
-              toast.error(response?.error || "لغو رزرو شما با خطا مواجه شد")
-            }
-          }} className="
-               text-xl! 
+        <div className="flex justify-center gap-4 mt-16 sm:mt-24 px-4">
+          <Button
+            onClick={async () => {
+              if (!hasData) {
+                toast.info("اطلاعات کامل نیست");
+                return;
+              }
+              const response = await cancelRegisteration(phoneNumber);
+              if (response?.ok) {
+                toast.success("رزرو شما با موفقیت لغو گردید");
+              } else {
+                toast.error(response?.error || "لغو رزرو شما با خطا مواجه شد");
+              }
+            }}
+            variant="solid"
+            className="
+              text-xl! 
               font-yekanbakh! 
               h-[56px]! sm:h-[60px]! 
               font-bold! 
               text-milky! 
               px-6! sm:px-8! 
               rounded-[20px]!
-          " icon={<X />} color="red">
-            انصراف رزروی
+            "
+            icon={<X />}
+            color="red"
+          >
+            انصراف از رزرو
           </Button>
+
           <Button
             onClick={handleDownload}
             className="

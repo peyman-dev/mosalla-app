@@ -1,26 +1,47 @@
-"use client"
+"use client";
+
 import { useRegisterStore } from "@/core/stores/register.store";
 import clsx from "clsx";
-import React, { ReactNode } from "react";
+import type { ReactNode } from "react";
 
-const FormContainer = ({ children }: {
-    children: ReactNode
-}) => {
-    const { step } = useRegisterStore()
-    const isResult = step == "RESULT"
+interface FormContainerProps {
+    children: ReactNode;
+}
 
-    const uiCSS = clsx(
-        "w-dvw lg:w-[812px] lg:max-h-[90dvh] h-dvh! lg:shadow-[inset_-14px_12px_24px_-16px_#00000060] lg:rounded-[50px] lg:bg-[#1C514C1A] lg:border border-white/10 lg:backdrop-blur-sm flex flex-col",
-        step == "ADD_FAMILY" || step == "RESULT" ? "lg:min-w-[70dvw]" : "lg:min-w-[812px]"
-    )
+export default function FormContainer({ children }: FormContainerProps) {
+    const { step } = useRegisterStore();
+    const isWide = step === "ADD_FAMILY" || step === "RESULT";
+    const isResult = step === "RESULT";
 
     return (
-        <div className={uiCSS}>
-            <div className="flex-1 h-full! min-h-full! *:h-full! py-20 overflow-y-auto custom-scrollbar ">
+        <div
+            className={clsx(
+                // پایه – موبایل اول
+                "w-dvw h-dvh flex flex-col",
+
+                // دسکتاپ / lg+
+                "lg:w-[812px] lg:max-h-[90dvh]",
+                "lg:rounded-[50px]",
+                "lg:bg-[#1C514C1A] overflow-hidden! lg:border lg:border-white/10 lg:backdrop-blur-sm",
+                "lg:shadow-[inset_-14px_12px_24px_-16px_#00000060]",
+
+                // عرض متغیر
+                isWide ? "lg:min-w-[70dvw]" : "lg:min-w-[812px]"
+            )}
+        >
+            <div
+                className={clsx(
+                    "flex-1 overflow-y-auto custom-scrollbar",
+
+                    // padding پیش‌فرض
+                    "py-16 px-5 sm:py-20 sm:px-6 lg:px-10",
+
+                    // در مرحله RESULT کاملاً بدون padding داخلی (معمولاً برای صفحه نتیجه/تیکت)
+                    isResult && "p-0!"
+                )}
+            >
                 {children}
             </div>
         </div>
     );
-};
-
-export default FormContainer;
+}
