@@ -11,6 +11,7 @@ import * as z from "zod";
 import clsx from "clsx";
 import { addFamilyMembers, getCapacityDays } from "@/app/actions";
 import { toast } from "react-toastify";
+import { useQuery } from "@tanstack/react-query";
 
 const nationalCodeSchema = z
     .string()
@@ -51,9 +52,6 @@ const AddFamilyStep = () => {
 
     const isAlreadyRegistered = Boolean(nationalCode && nationalCode.trim().length === 10);
 
-    const [days, setDays] = React.useState<CapacityDay[]>([]);
-    const [loadingDays, setLoadingDays] = React.useState(true);
-
     const {
         control,
         handleSubmit,
@@ -73,51 +71,31 @@ const AddFamilyStep = () => {
 
     const selectedDay = watch("attendanceDay");
 
-    React.useEffect(() => {
-        let ignore = false;
+    const { data: days = [], isLoading: loadingDays } = useQuery<CapacityDay[]>({
+        queryKey: ["capacity-days"],
+        queryFn: async () => {
+            const res = await getCapacityDays();
+            console.log(res);
 
-        const fetchDays = async () => {
-            setLoadingDays(true);
-            try {
-                const res = await getCapacityDays();
-                console.log(res);
+            if (res?.ok && Array.isArray(res.data)) {
+                const todayStart = new Date().setHours(0, 0, 0, 0);
 
-
-                if (ignore) return;
-
-                if (res?.ok && Array.isArray(res.data)) {
-                    const serverDays: CapacityDay[] = res.data;
-
-                    const todayStart = new Date().setHours(0, 0, 0, 0);
-
-                    const processedDays = serverDays.map((day) => ({
-                        ...day,
-                        disabled: day.timestamp ? day.timestamp < todayStart : false,
-                    }));
-
-                    setDays(processedDays);
-
-                    if (!selectedDay) {
-                        const firstAvailable = processedDays.find((d) => d.hasCapacity && !d.disabled);
-                        if (firstAvailable) {
-                            setValue("attendanceDay", firstAvailable.value);
-                        }
-                    }
-                } else {
-                    setDays(generateFallbackDays());
-                }
-            } catch {
-                setDays(generateFallbackDays());
-            } finally {
-                if (!ignore) setLoadingDays(false);
+                return res.data.map((day: CapacityDay) => ({
+                    ...day,
+                    disabled: day.timestamp ? day.timestamp < todayStart : false,
+                }));
             }
-        };
 
-        fetchDays();
-        return () => {
-            ignore = true;
-        };
-    }, [selectedDay, setValue]);
+            return generateFallbackDays();
+        },
+        staleTime: 1000 * 60 * 5,     // 5 دقیقه
+        gcTime: 1000 * 60 * 30,       // 30 دقیقه (قبلاً cacheTime بود)
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+    });
+    console.log(loadingDays);
+
+    console.log(days);
 
     const generateFallbackDays = (): CapacityDay[] => {
         return Array.from({ length: 30 }, (_, i) => {
@@ -168,8 +146,6 @@ const AddFamilyStep = () => {
         };
 
         const response = await addFamilyMembers(payload);
-        console.log(response);
-
 
         if (response?.ok) {
             toast.success("ثبت‌نام با موفقیت انجام شد");

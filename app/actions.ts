@@ -24,11 +24,8 @@ export const logInMobile = async (phoneNumber: string) => {
     return result;
   } catch (error) {
     console.log(error);
-
-    return {
-      ok: false,
-      error,
-    };
+    
+    return parseThis(error)
   }
 };
 
@@ -146,7 +143,9 @@ export const getCapacityDays = async () => {
   try {
     const response = await request.get("/capacity/ramadan-days/");
     const data = await response.data;
+    console.log(data);
     return data;
+    
   } catch (error) {
     console.log(error);
 

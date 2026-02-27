@@ -4,6 +4,7 @@ const baseURL = process.env.BASE_URI || "http://194.48.198.187:8000/api";
 
 export const request = axios.create({
   baseURL,
+  proxy: false,
 });
 
 request.interceptors.response.use(
